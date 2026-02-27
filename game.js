@@ -191,6 +191,38 @@ function placeCardOnBoard(boardIndex, cardInfo, owner) {
     };
 }
 
+/**
+ * 盤面を仮想的に変更して、引っくり返せる枚数を計算するシミュレーション関数（AI用）
+ * @param {number} boardIndex - おきたいマス (0-8)
+ * @param {Object} cardInfo - カードデータ
+ * @param {string} owner - 'p1' または 'p2'
+ * @returns {number} - ひっくり返せる枚数
+ */
+function simulatePlacement(boardIndex, cardInfo, owner) {
+    if (boardState[boardIndex] !== null) {
+        return 0; // すでに置かれている場合は0枚
+    }
+
+    // 1. 現在の盤面状態と特別ルール状態をディープコピーして保存
+    const originalBoardState = boardState.map(cell => cell ? { ...cell, stats: [...cell.stats], owner: cell.owner, id: cell.id } : null);
+    const originalActiveSpecialRules = [...activeSpecialRules];
+
+    // 2. 実際に配置処理を呼ぶ（内部で boardState が書き換わる）
+    const result = placeCardOnBoard(boardIndex, cardInfo, owner);
+
+    // 3. ひっくり返した枚数を取得
+    const flippedCount = result.flipped.length;
+
+    // 4. 盤面状態を元に戻す
+    for (let i = 0; i < 9; i++) {
+        boardState[i] = originalBoardState[i];
+    }
+    activeSpecialRules.length = 0;
+    originalActiveSpecialRules.forEach(r => activeSpecialRules.push(r));
+
+    return flippedCount;
+}
+
 function checkSpecialRules(index, owner) {
     const flipped = [];
     const originCard = boardState[index];
