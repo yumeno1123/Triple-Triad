@@ -209,7 +209,7 @@ function getPlayerRareCardIds() {
     if (typeof playerInventory !== 'undefined') {
         for (const [id, count] of Object.entries(playerInventory)) {
             const card = CARD_DATA.find(c => c.id === id);
-            if (card && card.level >= 8 && count > 0) {
+            if (card && (card.level >= 8 || card.id === 'c48') && count > 0) {
                 rareIds.add(id);
             }
         }
@@ -218,12 +218,12 @@ function getPlayerRareCardIds() {
     // 現在のデッキ（p1Hand / playerSelectedDeck）から
     if (typeof p1Hand !== 'undefined' && p1Hand) {
         p1Hand.forEach(c => {
-            if (c && c.level >= 8) rareIds.add(c.id);
+            if (c && (c.level >= 8 || c.id === 'c48')) rareIds.add(c.id);
         });
     }
     if (typeof playerSelectedDeck !== 'undefined' && playerSelectedDeck) {
         playerSelectedDeck.forEach(c => {
-            if (c && c.level >= 8) rareIds.add(c.id);
+            if (c && (c.level >= 8 || c.id === 'c48')) rareIds.add(c.id);
         });
     }
 
@@ -239,8 +239,8 @@ function drawRandomCards(count = 5) {
     const playerRareIds = getPlayerRareCardIds();
     const hand = [];
     const deck = CARD_DATA.filter(card => {
-        // レアカード（Lv8以上）は、プレイヤーが所持していない場合のみランダムプールに出現する
-        if (card.level >= 8 && playerRareIds.has(card.id)) {
+        // レアカード（Lv8以上 + コヨコヨ）は、プレイヤーが所持していない場合のみランダムプールに出現する
+        if ((card.level >= 8 || card.id === 'c48') && playerRareIds.has(card.id)) {
             return false;
         }
         return true;
@@ -253,7 +253,7 @@ function drawRandomCards(count = 5) {
     for (const card of shuffled) {
         if (hand.length >= count) break;
 
-        if (card.level >= 8) {
+        if (card.level >= 8 || card.id === 'c48') {
             if (!chosenRareIds.has(card.id)) {
                 chosenRareIds.add(card.id);
                 hand.push({ ...card, stats: [...card.stats] });
@@ -289,7 +289,7 @@ function drawNPCCards(npcLevel, count = 5) {
     const pool = CARD_DATA.filter(card => {
         if (card.level < minLevel || card.level > maxLevel) return false;
         // レア重複フィルタ（世界に1枚）
-        if (card.level >= 8 && playerRareIds.has(card.id)) return false;
+        if ((card.level >= 8 || card.id === 'c48') && playerRareIds.has(card.id)) return false;
         return true;
     });
 
@@ -298,7 +298,7 @@ function drawNPCCards(npcLevel, count = 5) {
 
     for (const card of shuffled) {
         if (hand.length >= count) break;
-        if (card.level >= 8) {
+        if (card.level >= 8 || card.id === 'c48') {
             if (!chosenRareIds.has(card.id)) {
                 chosenRareIds.add(card.id);
                 hand.push({ ...card, stats: [...card.stats] });
@@ -310,13 +310,13 @@ function drawNPCCards(npcLevel, count = 5) {
 
     // 万が一足りない場合（プールが枯れている、レベル8以上をプレイヤーが独占している等）
     if (hand.length < count) {
-        const fullPool = CARD_DATA.filter(c => c.level <= npcLevel && !(c.level >= 8 && playerRareIds.has(c.id)));
+        const fullPool = CARD_DATA.filter(c => c.level <= npcLevel && !((c.level >= 8 || c.id === 'c48') && playerRareIds.has(c.id)));
         const fullShuffled = [...fullPool].sort(() => 0.5 - Math.random());
         for (const card of fullShuffled) {
             if (hand.length >= count) break;
-            if (card.level >= 8 && chosenRareIds.has(card.id)) continue;
+            if ((card.level >= 8 || card.id === 'c48') && chosenRareIds.has(card.id)) continue;
 
-            if (card.level >= 8) chosenRareIds.add(card.id);
+            if (card.level >= 8 || card.id === 'c48') chosenRareIds.add(card.id);
             hand.push({ ...card, stats: [...card.stats] });
         }
     }

@@ -153,8 +153,8 @@ function addCardToDeck(card, matchType) {
     const currentCountInDeck = playerSelectedDeck.filter(c => c.id === card.id).length;
     let maxOwned = matchType === 'free' ? 5 : (playerInventory[card.id] || 0);
 
-    // 新規追加制限：レアカード（Lv8以上）はフリーモードでも1枚制限
-    if (card.level >= 8) {
+    // 新規追加制限：レアカード（Lv8以上 + コヨコヨ）はフリーモードでも1枚制限
+    if (card.level >= 8 || card.id === 'c48') {
         maxOwned = Math.min(maxOwned, 1);
     }
 
@@ -197,10 +197,10 @@ function updateDeckUI() {
         const countInDeck = playerSelectedDeck.filter(c => c.id === id).length;
         let maxOwned = matchType === 'free' ? 5 : (playerInventory[id] || 0);
 
-        // UI制限：レアカード（Lv8以上）は1枚制限
+        // UI制限：レアカード（Lv8以上 + コヨコヨ）は1枚制限
         if (typeof CARD_DATA !== 'undefined') {
             const cardInfo = CARD_DATA.find(c => c.id === id);
-            if (cardInfo && cardInfo.level >= 8) {
+            if (cardInfo && (cardInfo.level >= 8 || cardInfo.id === 'c48')) {
                 maxOwned = Math.min(maxOwned, 1);
             }
         }

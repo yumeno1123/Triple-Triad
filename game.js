@@ -397,10 +397,10 @@ function saveInventory() {
 }
 
 function addCardToInventory(cardId) {
-    // レアカード（Lv8以上）は1枚しか所持できない（世界に1枚しか存在しない）
+    // レアカード（Lv8以上 + コヨコヨ）は1枚しか所持できない（世界に1枚しか存在しない）
     if (typeof CARD_DATA !== 'undefined') {
         const cardInfo = CARD_DATA.find(c => c.id === cardId);
-        if (cardInfo && cardInfo.level >= 8) {
+        if (cardInfo && (cardInfo.level >= 8 || cardInfo.id === 'c48')) {
             if (playerInventory[cardId] >= 1) {
                 return; // すでに所持している場合は追加をスキップ
             }
