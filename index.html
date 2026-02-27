@@ -121,190 +121,207 @@
                         </select>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- デッキ編集画面 -->
-        <section id="screen-deck-edit" class="screen hidden">
-            <header class="deck-header">
-                <h2>DECK EDIT</h2>
-                <div class="deck-selection-status">
-                    <span id="selected-count">1</span> / 5 CARDS SELECTED
-                </div>
-            </header>
-            <div class="deck-edit-container">
-                <div class="current-deck-area">
-                    <h3>選択中の手札</h3>
-                    <div id="deck-slots" class="deck-slots">
-                        <!-- 選択した5枚がここに並ぶ -->
+                <h3 style="margin-top: 15px;">サウンド設定</h3>
+                <div class="audio-settings">
+                    <div class="audio-slider-group">
+                        <span>BGM音量</span>
+                        <input type="range" id="bgm-volume-input" min="0" max="1" step="0.05" value="0.5">
                     </div>
-                </div>
-                <div class="available-cards-area">
-                    <h3>カードを選択してください</h3>
-                    <div id="deck-available-grid">
-                        <!-- 選択可能なカード一覧 -->
+                    <div class="audio-slider-group">
+                        <span>SE音量</span>
+                        <input type="range" id="se-volume-input" min="0" max="1" step="0.05" value="0.5">
                     </div>
                 </div>
             </div>
-            <div class="deck-footer">
-                <button id="btn-deck-back" class="btn-secondary">戻る</button>
-                <button id="btn-deck-start" class="btn-primary" disabled>対局開始</button>
+    </div>
+    </section>
+
+    <!-- デッキ編集画面 -->
+    <section id="screen-deck-edit" class="screen hidden">
+        <header class="deck-header">
+            <h2>DECK EDIT</h2>
+            <div class="deck-selection-status">
+                <span id="selected-count">1</span> / 5 CARDS SELECTED
             </div>
-        </section>
-
-        <!-- ゲームプレイ画面 -->
-        <section id="screen-game" class="screen hidden">
-            <header class="game-header">
-                <div class="player-info player1-text">
-                    <span class="score" id="score-player1">5</span>
-                    <span class="name">Player 1 (Blue)</span>
-                </div>
-                <div class="turn-indicator" id="turn-indicator">TURN: PLAYER 1</div>
-                <div class="player-info player2-text">
-                    <span class="name">Player 2 (Red)</span>
-                    <span class="score" id="score-player2">5</span>
-                </div>
-            </header>
-
-            <div class="game-area">
-                <!-- Player 2 (CPU) の手札：上側に配置 -->
-                <div class="hand-area player2-hand" id="hand-player2"></div>
-
-                <!-- 3x3 のゲームボード：中央に配置 -->
-                <div class="board" id="game-board">
-                    <!-- Javascriptで9マスを自動生成 -->
-                </div>
-
-                <!-- Player 1 の手札：下側に配置 -->
-                <div class="hand-area player1-hand" id="hand-player1"></div>
-            </div>
-        </section>
-
-        <!-- リザルト（結果）画面 -->
-        <section id="screen-result" class="screen hidden overlay">
-            <div class="result-box">
-                <h2 id="result-title">YOU WIN!</h2>
-                <div class="result-details">
-                    <div class="result-scores">
-                        <span id="final-score-p1" class="player1-text"></span>
-                        <span> - </span>
-                        <span id="final-score-p2" class="player2-text"></span>
-                    </div>
-                    <button id="btn-back-title" class="btn-primary">タイトルへ戻る</button>
+        </header>
+        <div class="deck-edit-container">
+            <div class="current-deck-area">
+                <h3>選択中の手札</h3>
+                <div id="deck-slots" class="deck-slots">
+                    <!-- 選択した5枚がここに並ぶ -->
                 </div>
             </div>
-        </section>
-
-        <!-- トレード選択画面 -->
-        <section id="screen-trade" class="screen hidden overlay">
-            <div class="trade-box">
-                <h2>SELECT REWARD</h2>
-                <p id="trade-info">Pick your card(s)</p>
-                <div id="trade-cards-grid" class="trade-grid"></div>
-                <button id="btn-confirm-trade" class="btn-primary" style="display: none; margin-top: 20px;">CONFIRM
-                    TRADE</button>
-            </div>
-        </section>
-
-        <!-- コレクション画面 -->
-        <section id="screen-collection" class="screen hidden">
-            <header class="collection-header">
-                <h2>CARD COLLECTION</h2>
-                <div id="inventory-count">TOTAL: 0</div>
-            </header>
-
-            <!-- 戦績パネル -->
-            <div class="stats-panel">
-                <div class="stats-item win">
-                    <span class="stats-label">WINS</span>
-                    <span id="stats-wins" class="stats-value">0</span>
-                </div>
-                <div class="stats-item loss">
-                    <span class="stats-label">LOSSES</span>
-                    <span id="stats-losses" class="stats-value">0</span>
-                </div>
-                <div class="stats-item draw">
-                    <span class="stats-label">DRAWS</span>
-                    <span id="stats-draws" class="stats-value">0</span>
+            <div class="available-cards-area">
+                <h3>カードを選択してください</h3>
+                <div id="deck-available-grid">
+                    <!-- 選択可能なカード一覧 -->
                 </div>
             </div>
+        </div>
+        <div class="deck-footer">
+            <button id="btn-deck-back" class="btn-secondary">戻る</button>
+            <button id="btn-deck-start" class="btn-primary" disabled>対局開始</button>
+        </div>
+    </section>
 
-            <!-- 詳細戦績エリア -->
-            <div class="detailed-stats-container">
-                <div class="stats-highlight">
-                    <span class="stats-label">最大点差勝利</span>
-                    <span id="stats-max-diff" class="stats-value highlight-text">0</span>
+    <!-- ゲームプレイ画面 -->
+    <section id="screen-game" class="screen hidden">
+        <header class="game-header">
+            <div class="player-info player1-text">
+                <span class="score" id="score-player1">5</span>
+                <span class="name">Player 1 (Blue)</span>
+            </div>
+            <div class="turn-indicator" id="turn-indicator">TURN: PLAYER 1</div>
+            <div class="player-info player2-text">
+                <span class="name">Player 2 (Red)</span>
+                <span class="score" id="score-player2">5</span>
+            </div>
+        </header>
+
+        <div class="game-area">
+            <!-- Player 2 (CPU) の手札：上側に配置 -->
+            <div class="hand-area player2-hand" id="hand-player2"></div>
+
+            <!-- 3x3 のゲームボード：中央に配置 -->
+            <div class="board" id="game-board">
+                <!-- Javascriptで9マスを自動生成 -->
+            </div>
+
+            <!-- Player 1 の手札：下側に配置 -->
+            <div class="hand-area player1-hand" id="hand-player1"></div>
+        </div>
+    </section>
+
+    <!-- リザルト（結果）画面 -->
+    <section id="screen-result" class="screen hidden overlay">
+        <div class="result-box">
+            <h2 id="result-title">YOU WIN!</h2>
+            <div class="result-details">
+                <div class="result-scores">
+                    <span id="final-score-p1" class="player1-text"></span>
+                    <span> - </span>
+                    <span id="final-score-p2" class="player2-text"></span>
                 </div>
-                <div class="recent-matches-container">
-                    <h3>RECENT MATCHES</h3>
-                    <ul id="recent-matches-list" class="recent-matches-list">
-                        <!-- JSで動的に追加 -->
+                <button id="btn-back-title" class="btn-primary">タイトルへ戻る</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- トレード選択画面 -->
+    <section id="screen-trade" class="screen hidden overlay">
+        <div class="trade-box">
+            <h2>SELECT REWARD</h2>
+            <p id="trade-info">Pick your card(s)</p>
+            <div id="trade-cards-grid" class="trade-grid"></div>
+            <button id="btn-confirm-trade" class="btn-primary" style="display: none; margin-top: 20px;">CONFIRM
+                TRADE</button>
+        </div>
+    </section>
+
+    <!-- コレクション画面 -->
+    <section id="screen-collection" class="screen hidden">
+        <header class="collection-header">
+            <h2>CARD COLLECTION</h2>
+            <div id="inventory-count">TOTAL: 0</div>
+        </header>
+
+        <!-- 戦績パネル -->
+        <div class="stats-panel">
+            <div class="stats-item win">
+                <span class="stats-label">WINS</span>
+                <span id="stats-wins" class="stats-value">0</span>
+            </div>
+            <div class="stats-item loss">
+                <span class="stats-label">LOSSES</span>
+                <span id="stats-losses" class="stats-value">0</span>
+            </div>
+            <div class="stats-item draw">
+                <span class="stats-label">DRAWS</span>
+                <span id="stats-draws" class="stats-value">0</span>
+            </div>
+        </div>
+
+        <!-- 詳細戦績エリア -->
+        <div class="detailed-stats-container">
+            <div class="stats-highlight">
+                <span class="stats-label">最大点差勝利</span>
+                <span id="stats-max-diff" class="stats-value highlight-text">0</span>
+            </div>
+            <div class="recent-matches-container">
+                <h3>RECENT MATCHES</h3>
+                <ul id="recent-matches-list" class="recent-matches-list">
+                    <!-- JSで動的に追加 -->
+                </ul>
+            </div>
+            <div class="level-stats-container">
+                <h3>VS CPU LEVEL STATS</h3>
+                <div id="level-stats-grid" class="level-stats-grid">
+                    <!-- JSで動的に追加 -->
+                </div>
+            </div>
+        </div>
+
+
+        <div id="collection-grid" class="collection-grid"></div>
+        <button id="btn-collection-back" class="btn-secondary" style="margin-top:20px;">BACK TO TITLE</button>
+    </section>
+
+    <!-- 遊び方ガイド（モーダル） -->
+    <section id="screen-help" class="screen hidden overlay">
+        <div class="help-box">
+            <h2>HOW TO PLAY</h2>
+            <div class="help-content">
+                <div class="help-section">
+                    <h3>基本ルール</h3>
+                    <p>3x3の盤面に交互にカードを置きます。隣り合うカードの数値を比較し、自分の数値が相手より大きければ、相手のカードを自分の色（陣地）に変えられます。最終的に自分の色のカードが多いプレイヤーの勝利です。
+                    </p>
+                </div>
+                <div class="help-section">
+                    <h3>マッチタイプ</h3>
+                    <p>対局前に選べる2つのモードです。</p>
+                    <ul>
+                        <li><strong>フリー</strong>: 全てのカードを自由に選んで遊べます。勝利しても新たなカードは獲得できません。</li>
+                        <li><strong>アドバンス</strong>: 自分が所持しているカードのみで戦います。勝利すると相手のカードを奪うことができます。</li>
                     </ul>
                 </div>
-                <div class="level-stats-container">
-                    <h3>VS CPU LEVEL STATS</h3>
-                    <div id="level-stats-grid" class="level-stats-grid">
-                        <!-- JSで動的に追加 -->
-                    </div>
+                <div class="help-section">
+                    <h3>トレードルール（アドバンス専用）</h3>
+                    <p>勝利時に相手から奪えるカードの決まり方です。</p>
+                    <ul>
+                        <li><strong>One</strong>: 勝者が、相手のカードの中から好きな1枚を選んで奪います。</li>
+                        <li><strong>Diff</strong>: 「勝者の得点 － 敗者の得点」の枚数分だけ、勝者がカードを選んで奪います。</li>
+                        <li><strong>Direct</strong>: 盤面で自分の色（陣地）にして終わったカードを、そのままお互いに全て獲得します。</li>
+                        <li><strong>All</strong>: 勝者が、相手のカード5枚をすべて奪います。</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h3>特殊ルール</h3>
+                    <p>対局環境を変える追加ルールです。タイトル画面で自由にON/OFFできます。</p>
+                    <ul>
+                        <li><strong>オープン</strong>: 常に相手の手札が見える状態で戦います。</li>
+                        <li><strong>ランダムハンド</strong>: 対局開始時、デッキを選択できず、所持している全カードの中から完全にランダムで5枚が選ばれます。</li>
+                        <li><strong>セイム</strong>: カードを置いた時、隣り合う2箇以上の「接する数値」が同じ場合、その相手カードを全て奪えます。</li>
+                        <li><strong>プラス</strong>: カードを置いた時、隣り合う2箇所以上の「自分と相手の接する数値の合計」が同じ場合、その相手カードを全て奪えます。</li>
+                        <li><strong>ウォールセイム</strong>: 盤面の外縁（壁）を数値「A（10）」とみなして、セイム判定を行います。</li>
+                        <li><strong>連鎖（コンボ）</strong>:
+                            セイムやプラスでカードを裏返した時、その裏返したカードが新たに置かれたものとみなされ、隣接する相手カードに対して再度通常の勝敗判定が行われます。</li>
+                        <li><strong>サドンデス</strong>:
+                            引き分け（DRAW）になった場合、その時の盤面と手札の「自分の色のカード」を新たな手札として、即座に再戦（延長戦）に突入します。</li>
+                    </ul>
+
                 </div>
             </div>
-
-
-            <div id="collection-grid" class="collection-grid"></div>
-            <button id="btn-collection-back" class="btn-secondary" style="margin-top:20px;">BACK TO TITLE</button>
-        </section>
-
-        <!-- 遊び方ガイド（モーダル） -->
-        <section id="screen-help" class="screen hidden overlay">
-            <div class="help-box">
-                <h2>HOW TO PLAY</h2>
-                <div class="help-content">
-                    <div class="help-section">
-                        <h3>基本ルール</h3>
-                        <p>3x3の盤面に交互にカードを置きます。隣り合うカードの数値を比較し、自分の数値が相手より大きければ、相手のカードを自分の色（陣地）に変えられます。最終的に自分の色のカードが多いプレイヤーの勝利です。
-                        </p>
-                    </div>
-                    <div class="help-section">
-                        <h3>マッチタイプ</h3>
-                        <p>対局前に選べる2つのモードです。</p>
-                        <ul>
-                            <li><strong>フリー</strong>: 全てのカードを自由に選んで遊べます。勝利しても新たなカードは獲得できません。</li>
-                            <li><strong>アドバンス</strong>: 自分が所持しているカードのみで戦います。勝利すると相手のカードを奪うことができます。</li>
-                        </ul>
-                    </div>
-                    <div class="help-section">
-                        <h3>トレードルール（アドバンス専用）</h3>
-                        <p>勝利時に相手から奪えるカードの決まり方です。</p>
-                        <ul>
-                            <li><strong>One</strong>: 勝者が、相手のカードの中から好きな1枚を選んで奪います。</li>
-                            <li><strong>Diff</strong>: 「勝者の得点 － 敗者の得点」の枚数分だけ、勝者がカードを選んで奪います。</li>
-                            <li><strong>Direct</strong>: 盤面で自分の色（陣地）にして終わったカードを、そのままお互いに全て獲得します。</li>
-                            <li><strong>All</strong>: 勝者が、相手のカード5枚をすべて奪います。</li>
-                        </ul>
-                    </div>
-                    <div class="help-section">
-                        <h3>特殊ルール</h3>
-                        <p>対局環境を変える追加ルールです。タイトル画面で自由にON/OFFできます。</p>
-                        <ul>
-                            <li><strong>オープン</strong>: 常に相手の手札が見える状態で戦います。</li>
-                            <li><strong>ランダムハンド</strong>: 対局開始時、デッキを選択できず、所持している全カードの中から完全にランダムで5枚が選ばれます。</li>
-                            <li><strong>セイム</strong>: カードを置いた時、隣り合う2箇以上の「接する数値」が同じ場合、その相手カードを全て奪えます。</li>
-                            <li><strong>プラス</strong>: カードを置いた時、隣り合う2箇所以上の「自分と相手の接する数値の合計」が同じ場合、その相手カードを全て奪えます。</li>
-                            <li><strong>ウォールセイム</strong>: 盤面の外縁（壁）を数値「A（10）」とみなして、セイム判定を行います。</li>
-                            <li><strong>連鎖（コンボ）</strong>:
-                                セイムやプラスでカードを裏返した時、その裏返したカードが新たに置かれたものとみなされ、隣接する相手カードに対して再度通常の勝敗判定が行われます。</li>
-                            <li><strong>サドンデス</strong>:
-                                引き分け（DRAW）になった場合、その時の盤面と手札の「自分の色のカード」を新たな手札として、即座に再戦（延長戦）に突入します。</li>
-                        </ul>
-
-                    </div>
-                </div>
-                <button id="btn-help-close" class="btn-primary">閉じる</button>
-            </div>
-        </section>
+            <button id="btn-help-close" class="btn-primary">閉じる</button>
+        </div>
+    </section>
     </div>
 
+    <!-- 背景BGM用プレイヤー -->
+    <audio id="bgm-player" loop></audio>
+
     <!-- スクリプトの読み込み（依存関係の順） -->
+    <script src="audio.js"></script>
     <script src="cards.js"></script>
     <script src="ai.js"></script>
     <script src="game.js"></script>

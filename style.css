@@ -1132,6 +1132,7 @@ body {
         font-size: 0.9rem;
     }
 }
+
 /* --- Detailed Stats UI --- */
 .detailed-stats-container {
     width: 90%;
@@ -1148,7 +1149,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 15px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     font-family: var(--font-heading);
 }
 
@@ -1158,7 +1159,8 @@ body {
     text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
-.recent-matches-container h3, .level-stats-container h3 {
+.recent-matches-container h3,
+.level-stats-container h3 {
     font-family: var(--font-heading);
     font-size: 1rem;
     color: #aaa;
@@ -1180,13 +1182,22 @@ body {
     justify-content: space-between;
     font-size: 0.85rem;
     padding: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.2);
 }
 
-.history-item.result-win .history-result { color: var(--color-p1); font-weight: bold; }
-.history-item.result-loss .history-result { color: var(--color-p2); }
-.history-item.result-draw .history-result { color: #ccc; }
+.history-item.result-win .history-result {
+    color: var(--color-p1);
+    font-weight: bold;
+}
+
+.history-item.result-loss .history-result {
+    color: var(--color-p2);
+}
+
+.history-item.result-draw .history-result {
+    color: #ccc;
+}
 
 .history-empty {
     text-align: center;
@@ -1204,10 +1215,10 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
     padding: 8px;
     border-radius: 5px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .lv-badge {
@@ -1243,39 +1254,102 @@ body {
     height: 6px;
     background: #fff;
     border-radius: 50%;
-    box-shadow: 0 0 8px 3px rgba(255,215,0,0.8);
+    box-shadow: 0 0 8px 3px rgba(255, 215, 0, 0.8);
 }
 
 .legendary-corner.top-left {
-    top: -2px; left: -2px;
-    border-right: none; border-bottom: none;
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
     border-top-left-radius: 8px;
 }
-.legendary-corner.top-left::after { top: -3px; left: -3px; }
+
+.legendary-corner.top-left::after {
+    top: -3px;
+    left: -3px;
+}
 
 .legendary-corner.top-right {
-    top: -2px; right: -2px;
-    border-left: none; border-bottom: none;
+    top: -2px;
+    right: -2px;
+    border-left: none;
+    border-bottom: none;
     border-top-right-radius: 8px;
 }
-.legendary-corner.top-right::after { top: -3px; right: -3px; }
+
+.legendary-corner.top-right::after {
+    top: -3px;
+    right: -3px;
+}
 
 .legendary-corner.bottom-left {
-    bottom: -2px; left: -2px;
-    border-right: none; border-top: none;
+    bottom: -2px;
+    left: -2px;
+    border-right: none;
+    border-top: none;
     border-bottom-left-radius: 8px;
 }
-.legendary-corner.bottom-left::after { bottom: -3px; left: -3px; }
+
+.legendary-corner.bottom-left::after {
+    bottom: -3px;
+    left: -3px;
+}
 
 .legendary-corner.bottom-right {
-    bottom: -2px; right: -2px;
-    border-left: none; border-top: none;
+    bottom: -2px;
+    right: -2px;
+    border-left: none;
+    border-top: none;
     border-bottom-right-radius: 8px;
 }
-.legendary-corner.bottom-right::after { bottom: -3px; right: -3px; }
 
-@keyframes legendaryShine {
-    0% { filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.5)); border-color: rgba(255, 215, 0, 0.8); }
-    100% { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 1)); border-color: #fff; }
+.legendary-corner.bottom-right::after {
+    bottom: -3px;
+    right: -3px;
 }
 
+@keyframes legendaryShine {
+    0% {
+        filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.5));
+        border-color: rgba(255, 215, 0, 0.8);
+    }
+
+    100% {
+        filter: drop-shadow(0 0 10px rgba(255, 215, 0, 1));
+        border-color: #fff;
+    }
+}
+
+/* =========================================================================
+   Audio Settings UI
+   ========================================================================= */
+.audio-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.audio-slider-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--color-text);
+}
+
+.audio-slider-group span {
+    width: 80px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.audio-slider-group input[type="range"] {
+    flex: 1;
+    margin-left: 10px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+}

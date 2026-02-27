@@ -361,6 +361,8 @@ async function finalizePlacementUI(cellIndex, cellElement, result) {
     selectedCardElement = null;
     clearBoardHighlight();
 
+    if (typeof playSE === 'function') playSE('place');
+
     if (result.rules && result.rules.length > 0) {
         showSpecialRuleEffect(result.rules);
     }
@@ -423,6 +425,7 @@ window.processFlippedCards = async function (flippedIndices, newOwner) {
             // 現在の持ち主が既にnewOwnerならスキップ
             if (cardElem.dataset.owner === newOwner) continue;
 
+            if (typeof playSE === 'function') playSE('flip');
             cardElem.classList.add('flip-anim');
             // アニメーションの完了を待機するためのユーティリティ
             await new Promise(resolve => {
@@ -531,17 +534,20 @@ function showResultScreen(result) {
     document.getElementById('final-score-p2').textContent = result.p2Score;
 
     if (result.winner === 'p1') {
+        if (typeof playSE === 'function') playSE('win');
         titleEl.textContent = 'YOU WIN!';
         titleEl.style.color = 'var(--color-p1)';
         screenResult.classList.add('win-effect');
         updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
     }
     else if (result.winner === 'p2') {
+        if (typeof playSE === 'function') playSE('lose');
         titleEl.textContent = 'YOU LOSE...';
         titleEl.style.color = 'var(--color-p2)';
         screenResult.classList.add('lose-effect');
         updateStats({ result: 'loss', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
     } else {
+        if (typeof playSE === 'function') playSE('draw');
         titleEl.textContent = 'DRAW';
         titleEl.style.color = 'white';
         updateStats({ result: 'draw', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
@@ -858,3 +864,39 @@ if (tradeSelect) tradeSelect.addEventListener('change', saveRuleSettings);
 // Load at startup
 loadRuleSettings();
 
+/* --- Audio UI & Initialization --- */
+document.addEventListener('DOMContentLoaded', () => {
+    const bgmSlider = document.getElementById('bgm-volume-input');
+    const seSlider = document.getElementById('se-volume-input');
+
+    if (bgmSlider) {
+        // Retrieve initial value if saved
+        const savedBgmVol = localStorage.getItem('bgmVolume');
+        if (savedBgmVol !== null) bgmSlider.value = savedBgmVol;
+        bgmSlider.addEventListener('input', (e) => setBGMVolume(parseFloat(e.target.value)));
+    }
+
+    if (seSlider) {
+        const savedSeVol = localStorage.getItem('seVolume');
+        if (savedSeVol !== null) seSlider.value = savedSeVol;
+        seSlider.addEventListener('input', (e) => setSEVolume(parseFloat(e.target.value)));
+    }
+
+    // Initialize audio context on first user interaction anywhere on the document
+    const initAudioOnInteraction = () => {
+        if (typeof initAudio === 'function') {
+            initAudio();
+            playBGM(); // Try playing BGM if any
+        }
+        document.removeEventListener('click', initAudioOnInteraction);
+    };
+    document.addEventListener('click', initAudioOnInteraction);
+});
+
+// A helper function to attach click sounds to all primary/secondary buttons globally
+document.addEventListener('click', (e) => {
+    // ボタンらしい要素がクリックされた場合に 'click' 音を鳴らす
+    if (e.target.closest('button') || e.target.closest('.card') || e.target.closest('.trade-card-item')) {
+        if (typeof playSE === 'function') playSE('click');
+    }
+});
