@@ -126,4 +126,9 @@
   - [x] `index.html` へのバージョン表示要素の追加
   - [x] バージョン管理の自動反映テスト
   - [x] GitHubへのPushと自動デプロイ確認
+- [x] **フェーズ34: NPCレベル選択機能の実装**
+  - [x] NPCレベル選択UIの追加（index.html, style.css）
+  - [x] NPC手札生成ロジックの実装（cards.js）
+  - [x] ゲーム初期化処理へのNPCレベル連携（game.js, main.js）
+  - [x] v1.1.0 へのバージョン更新と自動デプロイ
 
