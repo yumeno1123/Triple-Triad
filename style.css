@@ -915,3 +915,9 @@ body {
 .help-section strong {
     color: white;
 }
+.version-info {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 8px;
+    letter-spacing: 1px;
+}
