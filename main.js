@@ -102,8 +102,8 @@ function renderDeckAvailableCards(matchType) {
     const grid = document.getElementById('deck-available-grid');
     grid.innerHTML = '';
 
-    // レベル（1〜10）ごとにグループ化して表示
-    for (let level = 1; level <= 10; level++) {
+    // レベル（10〜1）の降順でグループ化して表示
+    for (let level = 10; level >= 1; level--) {
         let levelCards = [];
         if (matchType === 'free') {
             levelCards = CARD_DATA.filter(c => c.level === level);
@@ -656,8 +656,8 @@ function renderCollection() {
     collectionGrid.innerHTML = '';
     let totalCount = 0;
 
-    // レベル（1〜10）ごとにグループ化
-    for (let level = 1; level <= 10; level++) {
+    // レベル（10〜1）の降順でグループ化
+    for (let level = 10; level >= 1; level--) {
         const levelCards = CARD_DATA.filter(c => c.level === level);
         if (levelCards.length === 0) continue;
 
