@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- PWA Settings -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <title>Triple Triad from FF8: Fan Remake</title>
+    <!-- Google Fonts for modern typography -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="game-container">
+        <!-- タイトル・メニュー画面 -->
+        <section id="screen-title" class="screen active">
+            <div class="title-logo">
+                <h1>TRIPLE<br>TRIAD</h1>
+                <p class="title-subtitle">from FF8: Fan Remake</p>
+            </div>
+            <div class="menu-buttons">
+                <button id="btn-pvp" class="btn-primary">対人戦 (Player vs Player)</button>
+                <button id="btn-pvc" class="btn-primary">CPU戦 (Player vs CPU)</button>
+                <button id="btn-collection" class="btn-secondary">カードコレクション</button>
+                <button id="btn-help" class="btn-secondary">プレイガイド</button>
+            </div>
+
+            <!-- マッチタイプ設定 -->
+            <div class="match-type-settings">
+                <h3>マッチタイプ</h3>
+                <div class="match-type-options">
+                    <label class="match-option">
+                        <input type="radio" name="match-mode" value="free" checked>
+                        <span class="option-card">
+                            <span class="option-title">フリー</span>
+                            <span class="option-desc">全カード使用可能</span>
+                        </span>
+                    </label>
+                    <label class="match-option">
+                        <input type="radio" name="match-mode" value="advance">
+                        <span class="option-card">
+                            <span class="option-title">アドバンス</span>
+                            <span class="option-desc">所持カードのみ</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ルール設定パネル -->
+            <div id="rule-settings" class="rule-settings">
+                <h3>特殊ルール設定</h3>
+                <div class="rules-grid">
+                    <label class="rule-item"><input type="checkbox" id="rule-open" checked> <span
+                            class="rule-name">オープン</span></label>
+                    <label class="rule-item"><input type="checkbox" id="rule-same" checked> <span
+                            class="rule-name">セイム</span></label>
+                    <label class="rule-item"><input type="checkbox" id="rule-same-wall" checked> <span
+                            class="rule-name">ウォールセイム</span></label>
+                    <label class="rule-item"><input type="checkbox" id="rule-plus" checked> <span
+                            class="rule-name">プラス</span></label>
+                    <label class="rule-item"><input type="checkbox" id="rule-sudden-death" checked> <span
+                            class="rule-name">サドンデス</span></label>
+                    <label class="rule-item"><input type="checkbox" id="rule-random-hand"> <span
+                            class="rule-name">ランダムハンド</span></label>
+                </div>
+
+                <h3 style="margin-top: 15px;">トレードルール</h3>
+                <div class="trade-rule-selector">
+                    <select id="select-trade-rule" class="select-modern">
+                        <option value="one">ワン (1枚選択)</option>
+                        <option value="diff">ディフ (点差分)</option>
+                        <option value="direct">ダイレクト (盤面の色)</option>
+                        <option value="all">オール (全部)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- デッキ編集画面 -->
+        <section id="screen-deck-edit" class="screen hidden">
+            <header class="deck-header">
+                <h2>DECK EDIT</h2>
+                <div class="deck-selection-status">
+                    <span id="selected-count">1</span> / 5 CARDS SELECTED
+                </div>
+            </header>
+            <div class="deck-edit-container">
+                <div class="current-deck-area">
+                    <h3>選択中の手札</h3>
+                    <div id="deck-slots" class="deck-slots">
+                        <!-- 選択した5枚がここに並ぶ -->
+                    </div>
+                </div>
+                <div class="available-cards-area">
+                    <h3>カードを選択してください</h3>
+                    <div id="deck-available-grid">
+                        <!-- 選択可能なカード一覧 -->
+                    </div>
+                </div>
+            </div>
+            <div class="deck-footer">
+                <button id="btn-deck-back" class="btn-secondary">戻る</button>
+                <button id="btn-deck-start" class="btn-primary" disabled>対局開始</button>
+            </div>
+        </section>
+
+        <!-- ゲームプレイ画面 -->
+        <section id="screen-game" class="screen hidden">
+            <header class="game-header">
+                <div class="player-info player1-text">
+                    <span class="score" id="score-player1">5</span>
+                    <span class="name">Player 1 (Blue)</span>
+                </div>
+                <div class="turn-indicator" id="turn-indicator">TURN: PLAYER 1</div>
+                <div class="player-info player2-text">
+                    <span class="name">Player 2 (Red)</span>
+                    <span class="score" id="score-player2">5</span>
+                </div>
+            </header>
+
+            <div class="game-area">
+                <!-- Player 2 (CPU) の手札：上側に配置 -->
+                <div class="hand-area player2-hand" id="hand-player2"></div>
+
+                <!-- 3x3 のゲームボード：中央に配置 -->
+                <div class="board" id="game-board">
+                    <!-- Javascriptで9マスを自動生成 -->
+                </div>
+
+                <!-- Player 1 の手札：下側に配置 -->
+                <div class="hand-area player1-hand" id="hand-player1"></div>
+            </div>
+        </section>
+
+        <!-- リザルト（結果）画面 -->
+        <section id="screen-result" class="screen hidden overlay">
+            <div class="result-box">
+                <h2 id="result-title">YOU WIN!</h2>
+                <div class="result-details">
+                    <div class="result-scores">
+                        <span id="final-score-p1" class="player1-text"></span>
+                        <span> - </span>
+                        <span id="final-score-p2" class="player2-text"></span>
+                    </div>
+                    <button id="btn-back-title" class="btn-primary">タイトルへ戻る</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- トレード選択画面 -->
+        <section id="screen-trade" class="screen hidden overlay">
+            <div class="trade-box">
+                <h2>SELECT REWARD</h2>
+                <p id="trade-info">Pick your card(s)</p>
+                <div id="trade-cards-grid" class="trade-grid"></div>
+                <button id="btn-confirm-trade" class="btn-primary" style="display: none; margin-top: 20px;">CONFIRM
+                    TRADE</button>
+            </div>
+        </section>
+
+        <!-- コレクション画面 -->
+        <section id="screen-collection" class="screen hidden">
+            <header class="collection-header">
+                <h2>CARD COLLECTION</h2>
+                <div id="inventory-count">TOTAL: 0</div>
+            </header>
+            <div id="collection-grid" class="collection-grid"></div>
+            <button id="btn-collection-back" class="btn-secondary" style="margin-top:20px;">BACK TO TITLE</button>
+        </section>
+
+        <!-- 遊び方ガイド（モーダル） -->
+        <section id="screen-help" class="screen hidden overlay">
+            <div class="help-box">
+                <h2>HOW TO PLAY</h2>
+                <div class="help-content">
+                    <div class="help-section">
+                        <h3>基本ルール</h3>
+                        <p>3x3の盤面に交互にカードを置きます。隣り合うカードの数値を比較し、自分の数値が相手より大きければ、相手のカードを自分の色（陣地）に変えられます。最終的に自分の色のカードが多いプレイヤーの勝利です。
+                        </p>
+                    </div>
+                    <div class="help-section">
+                        <h3>マッチタイプ</h3>
+                        <p>対局前に選べる2つのモードです。</p>
+                        <ul>
+                            <li><strong>フリー</strong>: 全てのカードを自由に選んで遊べます。勝利しても新たなカードは獲得できません。</li>
+                            <li><strong>アドバンス</strong>: 自分が所持しているカードのみで戦います。勝利すると相手のカードを奪うことができます。</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h3>トレードルール（アドバンス専用）</h3>
+                        <p>勝利時に相手から奪えるカードの決まり方です。</p>
+                        <ul>
+                            <li><strong>One</strong>: 勝者が、相手のカードの中から好きな1枚を選んで奪います。</li>
+                            <li><strong>Diff</strong>: 「勝者の得点 － 敗者の得点」の枚数分だけ、勝者がカードを選んで奪います。</li>
+                            <li><strong>Direct</strong>: 盤面で自分の色（陣地）にして終わったカードを、そのままお互いに全て獲得します。</li>
+                            <li><strong>All</strong>: 勝者が、相手のカード5枚をすべて奪います。</li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h3>特殊ルール</h3>
+                        <p>対局環境を変える追加ルールです。タイトル画面で自由にON/OFFできます。</p>
+                        <ul>
+                            <li><strong>オープン</strong>: 常に相手の手札が見える状態で戦います。</li>
+                            <li><strong>ランダムハンド</strong>: 対局開始時、デッキを選択できず、所持している全カードの中から完全にランダムで5枚が選ばれます。</li>
+                            <li><strong>セイム</strong>: カードを置いた時、隣り合う2箇以上の「接する数値」が同じ場合、その相手カードを全て奪えます。</li>
+                            <li><strong>プラス</strong>: カードを置いた時、隣り合う2箇所以上の「自分と相手の接する数値の合計」が同じ場合、その相手カードを全て奪えます。</li>
+                            <li><strong>ウォールセイム</strong>: 盤面の外縁（壁）を数値「A（10）」とみなして、セイム判定を行います。</li>
+                            <li><strong>連鎖（コンボ）</strong>:
+                                セイムやプラスでカードを裏返した時、その裏返したカードが新たに置かれたものとみなされ、隣接する相手カードに対して再度通常の勝敗判定が行われます。</li>
+                            <li><strong>サドンデス</strong>:
+                                引き分け（DRAW）になった場合、その時の盤面と手札の「自分の色のカード」を新たな手札として、即座に再戦（延長戦）に突入します。</li>
+                        </ul>
+
+                    </div>
+                </div>
+                <button id="btn-help-close" class="btn-primary">閉じる</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- スクリプトの読み込み（依存関係の順） -->
+    <script src="cards.js"></script>
+    <script src="ai.js"></script>
+    <script src="game.js"></script>
+    <script src="main.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+</body>
+
+</html>

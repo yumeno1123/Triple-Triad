@@ -1,0 +1,17 @@
+# Gitで無視するファイル
+
+# OS関連
+Thumbs.db
+desktop.ini
+
+# エディタ・ツール
+.vscode/
+.gemini/
+.antigravity/
+
+# 一時ファイル
+tmp/
+*.log
+
+# ドキュメント（プロジェクトの本体ではない場合）
+# docs/  <- 今回はプロジェクトの一部として管理するためコメントアウト

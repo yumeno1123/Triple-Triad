@@ -1,0 +1,22 @@
+{
+  "name": "Triple Triad - カードゲーム",
+  "short_name": "Triple Triad",
+  "description": "ルールで陣地を奪い合うカードゲーム",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#2196F3",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
