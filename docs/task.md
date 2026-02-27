@@ -118,4 +118,8 @@
   - [x] 全110枚のカードデータ定義（cards.jsの刷新）
   - [x] コレクション画面およびデッキ選択画面での表示確認
   - [x] GitHubへのPushと自動デプロイ確認
+- [x] **フェーズ32: カードの並び順をレベル別降順に変更**
+  - [x] `main.js` の `renderCollection` ループを10→1に変更
+  - [x] `main.js` の `renderDeckAvailableCards` ループを10→1に変更
+  - [x] GitHubへのPushと自動デプロイ確認
 
