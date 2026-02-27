@@ -4,6 +4,11 @@
 
 ---
 
+### 2026-02-27 22:45 (JST)
+- **自動デプロイ環境（CI/CD）の構築**
+  - GitHubリポジトリ [Triple-Triad](https://github.com/yumeno1123/Triple-Triad) を作成し、Netlifyと連携。
+  - 今後はAntigravityによるコード修正が自動的に公開サイトへ反映される仕組みを導入。
+
 ### 2026-02-27 22:08 (JST)
 - **ウェブ公開ロードマップの作成**
   - ゲームをインターネット上に公開するための手順書 `deployment_roadmap.md` を作成。
