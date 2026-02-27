@@ -200,9 +200,132 @@ function createCardElement(cardInfo, owner = 'neutral', uniqueId) {
 }
 
 /**
+ * プレイヤーが既に持っている、あるいはデッキに入れているレアカード（Lv8以上）のIDリストを取得
+ */
+function getPlayerRareCardIds() {
+    const rareIds = new Set();
+
+    // インベントリから
+    if (typeof playerInventory !== 'undefined') {
+        for (const [id, count] of Object.entries(playerInventory)) {
+            const card = CARD_DATA.find(c => c.id === id);
+            if (card && card.level >= 8 && count > 0) {
+                rareIds.add(id);
+            }
+        }
+    }
+
+    // 現在のデッキ（p1Hand / playerSelectedDeck）から
+    if (typeof p1Hand !== 'undefined' && p1Hand) {
+        p1Hand.forEach(c => {
+            if (c && c.level >= 8) rareIds.add(c.id);
+        });
+    }
+    if (typeof playerSelectedDeck !== 'undefined' && playerSelectedDeck) {
+        playerSelectedDeck.forEach(c => {
+            if (c && c.level >= 8) rareIds.add(c.id);
+        });
+    }
+
+    return rareIds;
+}
+
+/**
  * ランダムに手札の配列を返す
  * @param {number} count 欲しい枚数 (通常5)
  * @returns {Array} 引いたカードデータの配列
  */
 function drawRandomCards(count = 5) {
-    const deck = [...CARD_DATA
+    const playerRareIds = getPlayerRareCardIds();
+    const hand = [];
+    const deck = CARD_DATA.filter(card => {
+        // レアカード（Lv8以上）は、プレイヤーが所持していない場合のみランダムプールに出現する
+        if (card.level >= 8 && playerRareIds.has(card.id)) {
+            return false;
+        }
+        return true;
+    });
+
+    const shuffled = [...deck].sort(() => 0.5 - Math.random());
+
+    // 引いた5枚の中でも同じレアが出ないようにする
+    const chosenRareIds = new Set();
+    for (const card of shuffled) {
+        if (hand.length >= count) break;
+
+        if (card.level >= 8) {
+            if (!chosenRareIds.has(card.id)) {
+                chosenRareIds.add(card.id);
+                hand.push({ ...card, stats: [...card.stats] });
+            }
+        } else {
+            hand.push({ ...card, stats: [...card.stats] });
+        }
+    }
+
+    // 万が一足りない場合は適当に補充
+    while (hand.length < count) {
+        const fallback = CARD_DATA[Math.floor(Math.random() * 5)]; // Lv1モンスターなど
+        hand.push({ ...fallback, stats: [...fallback.stats] });
+    }
+
+    return hand;
+}
+
+/**
+ * NPCの手札をレベルに応じて生成する
+ * @param {number} npcLevel NPCのレベル (1-10)
+ * @param {number} count 欲しい枚数 (通常5)
+ * @returns {Array}
+ */
+function drawNPCCards(npcLevel, count = 5) {
+    const playerRareIds = getPlayerRareCardIds();
+    const hand = [];
+
+    // NPCレベルに応じたカードプール (レベル -1 から レベル +1 の範囲)
+    const minLevel = Math.max(1, npcLevel - 1);
+    const maxLevel = Math.min(10, npcLevel + 1);
+
+    const pool = CARD_DATA.filter(card => {
+        if (card.level < minLevel || card.level > maxLevel) return false;
+        // レア重複フィルタ（世界に1枚）
+        if (card.level >= 8 && playerRareIds.has(card.id)) return false;
+        return true;
+    });
+
+    const shuffled = [...pool].sort(() => 0.5 - Math.random());
+    const chosenRareIds = new Set();
+
+    for (const card of shuffled) {
+        if (hand.length >= count) break;
+        if (card.level >= 8) {
+            if (!chosenRareIds.has(card.id)) {
+                chosenRareIds.add(card.id);
+                hand.push({ ...card, stats: [...card.stats] });
+            }
+        } else {
+            hand.push({ ...card, stats: [...card.stats] });
+        }
+    }
+
+    // 万が一足りない場合（プールが枯れている、レベル8以上をプレイヤーが独占している等）
+    if (hand.length < count) {
+        const fullPool = CARD_DATA.filter(c => c.level <= npcLevel && !(c.level >= 8 && playerRareIds.has(c.id)));
+        const fullShuffled = [...fullPool].sort(() => 0.5 - Math.random());
+        for (const card of fullShuffled) {
+            if (hand.length >= count) break;
+            if (card.level >= 8 && chosenRareIds.has(card.id)) continue;
+
+            if (card.level >= 8) chosenRareIds.add(card.id);
+            hand.push({ ...card, stats: [...card.stats] });
+        }
+    }
+
+    // それでも足りなければLv1で埋める（フェールセーフ）
+    while (hand.length < count) {
+        const fallback = CARD_DATA[Math.floor(Math.random() * 5)];
+        hand.push({ ...fallback, stats: [...fallback.stats] });
+    }
+
+    return hand;
+}

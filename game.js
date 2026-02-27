@@ -34,6 +34,9 @@ function initGame(mode, rules = null, playerHand = null, npcLevel = 5) {
     }
 
     boardState = new Array(9).fill(null);
+    // 生成前に前回の状態をクリアしておく（フィルタリング誤作動防止）
+    p1Hand = [];
+    p2Hand = [];
 
     // プレイヤーの手札が指定されていればそれを使用、そうでなければランダム
     p1Hand = playerHand ? [...playerHand] : drawRandomCards(5);
@@ -394,6 +397,16 @@ function saveInventory() {
 }
 
 function addCardToInventory(cardId) {
+    // レアカード（Lv8以上）は1枚しか所持できない（世界に1枚しか存在しない）
+    if (typeof CARD_DATA !== 'undefined') {
+        const cardInfo = CARD_DATA.find(c => c.id === cardId);
+        if (cardInfo && cardInfo.level >= 8) {
+            if (playerInventory[cardId] >= 1) {
+                return; // すでに所持している場合は追加をスキップ
+            }
+        }
+    }
+
     if (!playerInventory[cardId]) {
         playerInventory[cardId] = 0;
     }

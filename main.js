@@ -151,7 +151,12 @@ function addCardToDeck(card, matchType) {
     if (playerSelectedDeck.length >= 5) return; // 5枚まで
 
     const currentCountInDeck = playerSelectedDeck.filter(c => c.id === card.id).length;
-    const maxOwned = matchType === 'free' ? 5 : (playerInventory[card.id] || 0);
+    let maxOwned = matchType === 'free' ? 5 : (playerInventory[card.id] || 0);
+
+    // 新規追加制限：レアカード（Lv8以上）はフリーモードでも1枚制限
+    if (card.level >= 8) {
+        maxOwned = Math.min(maxOwned, 1);
+    }
 
     if (currentCountInDeck < maxOwned) {
         playerSelectedDeck.push(card);
@@ -190,7 +195,16 @@ function updateDeckUI() {
     gridItems.forEach(item => {
         const id = item.dataset.id;
         const countInDeck = playerSelectedDeck.filter(c => c.id === id).length;
-        const maxOwned = matchType === 'free' ? 5 : (playerInventory[id] || 0);
+        let maxOwned = matchType === 'free' ? 5 : (playerInventory[id] || 0);
+
+        // UI制限：レアカード（Lv8以上）は1枚制限
+        if (typeof CARD_DATA !== 'undefined') {
+            const cardInfo = CARD_DATA.find(c => c.id === id);
+            if (cardInfo && cardInfo.level >= 8) {
+                maxOwned = Math.min(maxOwned, 1);
+            }
+        }
+
         const remaining = maxOwned - countInDeck;
 
         const badge = item.querySelector('.card-count-badge');
