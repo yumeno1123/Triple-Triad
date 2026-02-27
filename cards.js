@@ -132,7 +132,7 @@ const CARD_DATA = [
     { id: 'c107', level: 10, name: 'リノア', stats: [4, 10, 2, 10] },
     { id: 'c108', level: 10, name: 'スコール', stats: [10, 4, 6, 9] },
     { id: 'c109', level: 10, name: 'サイファー', stats: [6, 9, 10, 4] },
-    { id: 'c110', level: 10, name: 'エデア', stats: [10, 10, 3, 3] },
+    { id: 'c110', level: 10, name: 'イデア', stats: [10, 10, 3, 3] },
 ];
 
 /**
@@ -202,6 +202,29 @@ function drawRandomCards(count = 5) {
         hand.push(deck[randomIndex]);
         // 重複なしにする場合は下を有効にするが、今回は重複あり(簡易的)にするためコメントアウト
         // deck.splice(randomIndex, 1);
+    }
+
+    return hand;
+}
+
+/**
+ * NPCレベルに基づき、適切な強さの手札を生成する
+ * レベル level の ±1 の範囲のカードを抽出して抽選する
+ * @param {number} level NPCレベル (1-10)
+ * @param {number} count 欲しい枚数 (通常5)
+ * @returns {Array} 引いたカードデータの配列
+ */
+function drawNPCCards(level, count = 5) {
+    const minLevel = Math.max(1, level - 1);
+    const maxLevel = Math.min(10, level + 1);
+
+    // 指定されたレベル範囲のカードを抽出
+    const pool = CARD_DATA.filter(c => c.level >= minLevel && c.level <= maxLevel);
+
+    const hand = [];
+    for (let i = 0; i < count; i++) {
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        hand.push(pool[randomIndex]);
     }
 
     return hand;

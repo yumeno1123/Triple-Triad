@@ -237,8 +237,9 @@ function finalizeStartGame() {
     if (rules.open) container.classList.add('rules-open');
     else container.classList.remove('rules-open');
 
-    // 選択したデッキを渡して初期化
-    initGame(pendingGameMode, rules, playerSelectedDeck);
+    // 選択したデッキとNPCレベルを渡して初期化
+    const npcLevel = parseInt(document.getElementById('npc-level-input').value) || 5;
+    initGame(pendingGameMode, rules, playerSelectedDeck, npcLevel);
 }
 
 function startGame(mode) {
@@ -298,6 +299,18 @@ window.setupUI = function () {
     updateTurnDisplay();
     updateScoreDisplay();
 };
+
+// NPCレベルスライダーのリアルタイム表示更新
+document.addEventListener('DOMContentLoaded', () => {
+    const levelInput = document.getElementById('npc-level-input');
+    const levelDisplay = document.getElementById('npc-level-value');
+
+    if (levelInput && levelDisplay) {
+        levelInput.addEventListener('input', (e) => {
+            levelDisplay.textContent = e.target.value;
+        });
+    }
+});
 
 function handleHandCardClick(cardElement, owner) {
     if (owner !== currentTurn) return;

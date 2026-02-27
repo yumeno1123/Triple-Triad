@@ -25,7 +25,7 @@
             <div class="title-logo">
                 <h1>TRIPLE<br>TRIAD</h1>
                 <p class="title-subtitle">from FF8: Fan Remake</p>
-                <div class="version-info">v1.0.0 (2026.02.27)</div>
+                <div class="version-info">v1.1.0 (2026.02.27)</div>
             </div>
             <div class="menu-buttons">
                 <button id="btn-pvp" class="btn-primary">対人戦 (Player vs Player)</button>
@@ -53,6 +53,19 @@
                         </span>
                     </label>
                 </div>
+            </div>
+
+            <!-- NPCレベル設定（CPU戦のみ有効） -->
+            <div id="npc-level-settings" class="npc-level-settings">
+                <div class="npc-level-header">
+                    <h3>NPCレベル: <span id="npc-level-value">5</span></h3>
+                </div>
+                <div class="npc-level-slider">
+                    <span>LV1</span>
+                    <input type="range" id="npc-level-input" min="1" max="10" value="5" step="1">
+                    <span>LV10</span>
+                </div>
+                <p class="npc-level-desc">NPCは自レベル ±1 のカードを使用します</p>
             </div>
 
             <!-- ルール設定パネル -->
