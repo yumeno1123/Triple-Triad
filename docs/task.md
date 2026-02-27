@@ -122,4 +122,8 @@
   - [x] `main.js` の `renderCollection` ループを10→1に変更
   - [x] `main.js` の `renderDeckAvailableCards` ループを10→1に変更
   - [x] GitHubへのPushと自動デプロイ確認
+- [x] **フェーズ33: バージョン情報の表示実装**
+  - [x] `index.html` へのバージョン表示要素の追加
+  - [x] バージョン管理の自動反映テスト
+  - [x] GitHubへのPushと自動デプロイ確認
 
