@@ -534,14 +534,17 @@ function showResultScreen(result) {
         titleEl.textContent = 'YOU WIN!';
         titleEl.style.color = 'var(--color-p1)';
         screenResult.classList.add('win-effect');
+        updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
     }
     else if (result.winner === 'p2') {
         titleEl.textContent = 'YOU LOSE...';
         titleEl.style.color = 'var(--color-p2)';
         screenResult.classList.add('lose-effect');
+        updateStats({ result: 'loss', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
     } else {
         titleEl.textContent = 'DRAW';
         titleEl.style.color = 'white';
+        updateStats({ result: 'draw', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
     }
 
     // FF8原作風の二段階演出：文字をバーンと出した後、2秒後にスコアやトレードをフェードイン
@@ -665,6 +668,48 @@ function showCollectionScreen() {
 }
 
 function renderCollection() {
+    // 戦績の表示更新
+    document.getElementById('stats-wins').textContent = playerStats.wins;
+    document.getElementById('stats-losses').textContent = playerStats.losses;
+    document.getElementById('stats-draws').textContent = playerStats.draws;
+    document.getElementById('stats-max-diff').textContent = playerStats.maxScoreDiff > 0 ? '+' + playerStats.maxScoreDiff : '0';
+
+    // 履歴の表示
+    const historyList = document.getElementById('recent-matches-list');
+    historyList.innerHTML = '';
+    if (playerStats.recentMatches && playerStats.recentMatches.length > 0) {
+        playerStats.recentMatches.forEach(match => {
+            const li = document.createElement('li');
+            li.className = `history-item result-${match.result}`;
+            const resultText = match.result === 'win' ? 'WIN' : (match.result === 'loss' ? 'LOSS' : 'DRAW');
+            li.innerHTML = `
+                <span class="history-date">${match.date}</span>
+                <span class="history-opponent">${match.opponent}</span>
+                <span class="history-score">${match.myScore} - ${match.enemyScore}</span>
+                <span class="history-result">${resultText}</span>
+            `;
+            historyList.appendChild(li);
+        });
+    } else {
+        historyList.innerHTML = '<li class="history-empty">NO RECORDS</li>';
+    }
+
+    // レベル別勝敗の表示
+    const levelGrid = document.getElementById('level-stats-grid');
+    levelGrid.innerHTML = '';
+    if (playerStats.levelStats) {
+        for (let i = 1; i <= 10; i++) {
+            const stats = playerStats.levelStats[i] || { wins: 0, losses: 0, draws: 0 };
+            const div = document.createElement('div');
+            div.className = 'level-stat-box';
+            div.innerHTML = `
+                <div class="lv-badge">LV${i}</div>
+                <div class="lv-record">W:${stats.wins} L:${stats.losses} D:${stats.draws}</div>
+            `;
+            levelGrid.appendChild(div);
+        }
+    }
+
     const collectionGrid = document.getElementById('collection-grid');
     collectionGrid.innerHTML = '';
     let totalCount = 0;
@@ -769,3 +814,47 @@ document.getElementById('btn-confirm-trade').addEventListener('click', () => {
         showTitleScreen();
     }, 2000);
 });
+
+/* --- Rule Settings Save/Load --- */
+function saveRuleSettings() {
+    const rules = {
+        open: document.getElementById('rule-open').checked,
+        same: document.getElementById('rule-same').checked,
+        sameWall: document.getElementById('rule-same-wall').checked,
+        plus: document.getElementById('rule-plus').checked,
+        suddenDeath: document.getElementById('rule-sudden-death').checked,
+        randomHand: document.getElementById('rule-random-hand').checked,
+        tradeRule: document.getElementById('select-trade-rule').value
+    };
+    localStorage.setItem('triple_triad_rules', JSON.stringify(rules));
+}
+
+function loadRuleSettings() {
+    const saved = localStorage.getItem('triple_triad_rules');
+    if (saved) {
+        try {
+            const rules = JSON.parse(saved);
+            if (rules.open !== undefined) document.getElementById('rule-open').checked = rules.open;
+            if (rules.same !== undefined) document.getElementById('rule-same').checked = rules.same;
+            if (rules.sameWall !== undefined) document.getElementById('rule-same-wall').checked = rules.sameWall;
+            if (rules.plus !== undefined) document.getElementById('rule-plus').checked = rules.plus;
+            if (rules.suddenDeath !== undefined) document.getElementById('rule-sudden-death').checked = rules.suddenDeath;
+            if (rules.randomHand !== undefined) document.getElementById('rule-random-hand').checked = rules.randomHand;
+            if (rules.tradeRule !== undefined) document.getElementById('select-trade-rule').value = rules.tradeRule;
+        } catch (e) {
+            console.error('Failed to parse rule settings', e);
+        }
+    }
+}
+
+// Attach listeners
+['rule-open', 'rule-same', 'rule-same-wall', 'rule-plus', 'rule-sudden-death', 'rule-random-hand'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', saveRuleSettings);
+});
+const tradeSelect = document.getElementById('select-trade-rule');
+if (tradeSelect) tradeSelect.addEventListener('change', saveRuleSettings);
+
+// Load at startup
+loadRuleSettings();
+

@@ -9,6 +9,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2196F3">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" href="favicon.png">
 
     <title>Triple Triad from FF8: Fan Remake</title>
     <!-- Google Fonts for modern typography -->
@@ -22,78 +23,103 @@
     <div id="game-container">
         <!-- タイトル・メニュー画面 -->
         <section id="screen-title" class="screen active">
-            <div class="title-logo">
-                <h1>TRIPLE<br>TRIAD</h1>
-                <p class="title-subtitle">from FF8: Fan Remake</p>
-                <div class="version-info">v1.1.0 (2026.02.27)</div>
-            </div>
-            <div class="menu-buttons">
-                <button id="btn-pvp" class="btn-primary">対人戦 (Player vs Player)</button>
-                <button id="btn-pvc" class="btn-primary">CPU戦 (Player vs CPU)</button>
-                <button id="btn-collection" class="btn-secondary">カードコレクション</button>
-                <button id="btn-help" class="btn-secondary">プレイガイド</button>
-            </div>
-
-            <!-- マッチタイプ設定 -->
-            <div class="match-type-settings">
-                <h3>マッチタイプ</h3>
-                <div class="match-type-options">
-                    <label class="match-option">
-                        <input type="radio" name="match-mode" value="free" checked>
-                        <span class="option-card">
-                            <span class="option-title">フリー</span>
-                            <span class="option-desc">全カード使用可能</span>
-                        </span>
-                    </label>
-                    <label class="match-option">
-                        <input type="radio" name="match-mode" value="advance">
-                        <span class="option-card">
-                            <span class="option-title">アドバンス</span>
-                            <span class="option-desc">所持カードのみ</span>
-                        </span>
-                    </label>
+            <div class="screen-scroll-wrapper">
+                <div class="title-logo">
+                    <h1>TRIPLE<br>TRIAD</h1>
+                    <p class="title-subtitle">from FF8: Fan Remake</p>
+                    <div class="version-info">v1.2.0 (2026.02.28)</div>
                 </div>
-            </div>
-
-            <!-- NPCレベル設定（CPU戦のみ有効） -->
-            <div id="npc-level-settings" class="npc-level-settings">
-                <div class="npc-level-header">
-                    <h3>NPCレベル: <span id="npc-level-value">5</span></h3>
-                </div>
-                <div class="npc-level-slider">
-                    <span>LV1</span>
-                    <input type="range" id="npc-level-input" min="1" max="10" value="5" step="1">
-                    <span>LV10</span>
-                </div>
-                <p class="npc-level-desc">NPCは自レベル ±1 のカードを使用します</p>
-            </div>
-
-            <!-- ルール設定パネル -->
-            <div id="rule-settings" class="rule-settings">
-                <h3>特殊ルール設定</h3>
-                <div class="rules-grid">
-                    <label class="rule-item"><input type="checkbox" id="rule-open" checked> <span
-                            class="rule-name">オープン</span></label>
-                    <label class="rule-item"><input type="checkbox" id="rule-same" checked> <span
-                            class="rule-name">セイム</span></label>
-                    <label class="rule-item"><input type="checkbox" id="rule-same-wall" checked> <span
-                            class="rule-name">ウォールセイム</span></label>
-                    <label class="rule-item"><input type="checkbox" id="rule-plus" checked> <span
-                            class="rule-name">プラス</span></label>
-                    <label class="rule-item"><input type="checkbox" id="rule-sudden-death" checked> <span
-                            class="rule-name">サドンデス</span></label>
-                    <label class="rule-item"><input type="checkbox" id="rule-random-hand"> <span
-                            class="rule-name">ランダムハンド</span></label>
+                <div class="menu-buttons">
+                    <button id="btn-pvp" class="btn-primary">
+                        <svg viewBox="0 0 24 24" class="btn-icon">
+                            <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z" />
+                        </svg>
+                        対人戦 (Player vs Player)
+                    </button>
+                    <button id="btn-pvc" class="btn-primary">
+                        <svg viewBox="0 0 24 24" class="btn-icon">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-2.5l7.5-7.5L13 7l-9 9 2.5 1.5z" />
+                        </svg>
+                        CPU戦 (Player vs CPU)
+                    </button>
+                    <button id="btn-collection" class="btn-secondary">
+                        <svg viewBox="0 0 24 24" class="btn-icon">
+                            <path
+                                d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" />
+                        </svg>
+                        カードコレクション
+                    </button>
+                    <button id="btn-help" class="btn-secondary">
+                        <svg viewBox="0 0 24 24" class="btn-icon">
+                            <path
+                                d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z" />
+                        </svg>
+                        プレイガイド
+                    </button>
                 </div>
 
-                <h3 style="margin-top: 15px;">トレードルール</h3>
-                <div class="trade-rule-selector">
-                    <select id="select-trade-rule" class="select-modern">
-                        <option value="one">ワン (1枚選択)</option>
-                        <option value="diff">ディフ (点差分)</option>
-                        <option value="direct">ダイレクト (盤面の色)</option>
-                        <option value="all">オール (全部)</option>
-                    </select>
+                <!-- マッチタイプ設定 -->
+                <div class="match-type-settings">
+                    <h3>マッチタイプ</h3>
+                    <div class="match-type-options">
+                        <label class="match-option">
+                            <input type="radio" name="match-mode" value="free" checked>
+                            <span class="option-card">
+                                <span class="option-title">フリー</span>
+                                <span class="option-desc">全カード使用可能</span>
+                            </span>
+                        </label>
+                        <label class="match-option">
+                            <input type="radio" name="match-mode" value="advance">
+                            <span class="option-card">
+                                <span class="option-title">アドバンス</span>
+                                <span class="option-desc">所持カードのみ</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- NPCレベル設定（CPU戦のみ有効） -->
+                <div id="npc-level-settings" class="npc-level-settings">
+                    <div class="npc-level-header">
+                        <h3>NPCレベル: <span id="npc-level-value">5</span></h3>
+                    </div>
+                    <div class="npc-level-slider">
+                        <span>LV1</span>
+                        <input type="range" id="npc-level-input" min="1" max="10" value="5" step="1">
+                        <span>LV10</span>
+                    </div>
+                    <p class="npc-level-desc">NPCは自レベル ±1 のカードを使用します</p>
+                </div>
+
+                <!-- ルール設定パネル -->
+                <div id="rule-settings" class="rule-settings">
+                    <h3>特殊ルール設定</h3>
+                    <div class="rules-grid">
+                        <label class="rule-item"><input type="checkbox" id="rule-open" checked> <span
+                                class="rule-name">オープン</span></label>
+                        <label class="rule-item"><input type="checkbox" id="rule-same" checked> <span
+                                class="rule-name">セイム</span></label>
+                        <label class="rule-item"><input type="checkbox" id="rule-same-wall" checked> <span
+                                class="rule-name">ウォールセイム</span></label>
+                        <label class="rule-item"><input type="checkbox" id="rule-plus" checked> <span
+                                class="rule-name">プラス</span></label>
+                        <label class="rule-item"><input type="checkbox" id="rule-sudden-death" checked> <span
+                                class="rule-name">サドンデス</span></label>
+                        <label class="rule-item"><input type="checkbox" id="rule-random-hand"> <span
+                                class="rule-name">ランダムハンド</span></label>
+                    </div>
+
+                    <h3 style="margin-top: 15px;">トレードルール</h3>
+                    <div class="trade-rule-selector">
+                        <select id="select-trade-rule" class="select-modern">
+                            <option value="one">ワン (1枚選択)</option>
+                            <option value="diff">ディフ (点差分)</option>
+                            <option value="direct">ダイレクト (盤面の色)</option>
+                            <option value="all">オール (全部)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </section>
@@ -186,6 +212,44 @@
                 <h2>CARD COLLECTION</h2>
                 <div id="inventory-count">TOTAL: 0</div>
             </header>
+
+            <!-- 戦績パネル -->
+            <div class="stats-panel">
+                <div class="stats-item win">
+                    <span class="stats-label">WINS</span>
+                    <span id="stats-wins" class="stats-value">0</span>
+                </div>
+                <div class="stats-item loss">
+                    <span class="stats-label">LOSSES</span>
+                    <span id="stats-losses" class="stats-value">0</span>
+                </div>
+                <div class="stats-item draw">
+                    <span class="stats-label">DRAWS</span>
+                    <span id="stats-draws" class="stats-value">0</span>
+                </div>
+            </div>
+
+            <!-- 詳細戦績エリア -->
+            <div class="detailed-stats-container">
+                <div class="stats-highlight">
+                    <span class="stats-label">最大点差勝利</span>
+                    <span id="stats-max-diff" class="stats-value highlight-text">0</span>
+                </div>
+                <div class="recent-matches-container">
+                    <h3>RECENT MATCHES</h3>
+                    <ul id="recent-matches-list" class="recent-matches-list">
+                        <!-- JSで動的に追加 -->
+                    </ul>
+                </div>
+                <div class="level-stats-container">
+                    <h3>VS CPU LEVEL STATS</h3>
+                    <div id="level-stats-grid" class="level-stats-grid">
+                        <!-- JSで動的に追加 -->
+                    </div>
+                </div>
+            </div>
+
+
             <div id="collection-grid" class="collection-grid"></div>
             <button id="btn-collection-back" class="btn-secondary" style="margin-top:20px;">BACK TO TITLE</button>
         </section>

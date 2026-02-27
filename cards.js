@@ -173,6 +173,7 @@ function createCardElement(cardInfo, owner = 'neutral', uniqueId) {
     card.innerHTML = `
         <div class="card-inner">
             <div class="card-front">
+                <img src="assets/cards/${cardInfo.id}.webp" class="card-image" onerror="this.style.display='none'">
                 <div class="card-stats">
                     <div class="stat stat-top ${tClass}">${formatStat(cardInfo.stats[0])}</div>
                     <div class="stat stat-right ${rClass}">${formatStat(cardInfo.stats[1])}</div>

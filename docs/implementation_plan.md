@@ -1,33 +1,43 @@
-# NPCレベル選択機能の実装計画
+# 戦績詳細記録機能 実装計画
 
 ## 1. 目的
-NPC（CPU）に強さの概念（レベル1〜10）を導入し、プレイヤーが対戦相手のレベルを選べるようにします。NPCの手札構成をレベルに連動させることで、段階的な難易度を楽しめるようにします。
+プレイヤーのモチベーションをさらに高めるため、現在の「トータルの勝敗」だけでなく、「どのレベルのCPUに勝ったか」や「過去の栄光（最大点差など）」を詳細に記録し、コレクション画面で確認できるようにします。
 
-## 2. 実装内容
+## 2. 実装項目
 
-### [index.html](file:///C:/Users/Owner/Documents/myproject/Triple%20Triad/index.html) の修正
-- マッチタイプ設定の付近に「NPCレベル」の選択セクションを追加します。
-- スライダーまたはボタン形式（1〜10）で選択可能にします。
-- この設定は「CPU戦」を選択している時のみ有効（または表示）されるように制御します。
+### データ構造の拡張 (`game.js`)
+現在の `playerStats` オブジェクトを以下のように拡張します。
+```json
+{
+  "wins": 0,
+  "losses": 0,
+  "draws": 0,
+  "levelStats": {
+    "1": { "wins": 0, "losses": 0, "draws": 0 },
+    "2": { "wins": 0, "losses": 0, "draws": 0 },
+    ...
+  },
+  "maxScoreDiff": 0, // 最大点差勝利
+  "recentMatches": [
+    // { date: 'YYYY/MM/DD', opponent: 'CPU LV5', myScore: 6, enemyScore: 4, result: 'win' }
+  ]
+}
+```
 
-### [style.css](file:///C:/Users/Owner/Documents/myproject/Triple%20Triad/style.css) の修正
-- レベル選択UIがプレミアムな外観になるようスタイリングします。
-- 選択中のレベルを視覚的に強調します。
+### 記録ロジックの追加 (`main.js` または `game.js`)
+- 試合終了時（`showResultScreen` 呼び出し時）に算出したスコアを用いて、詳細データを更新します。
+- CPU戦の場合は、対戦したNPCのレベル情報を元に `levelStats` を更新。
+- お互いのスコア差を計算し、過去最大であれば `maxScoreDiff` を更新。
+- 日付を含めた試合結果の要約を作成し、`recentMatches` リストの先頭に追加（最大10件で古いものを削除）。
 
-### [cards.js](file:///C:/Users/Owner/Documents/myproject/Triple%20Triad/cards.js) の修正
-- 新しい関数 `drawNPCCards(level, count = 5)` を追加します。
-- ロジック: `CARD_DATA` から `level - 1` 以上 `level + 1` 以下のカードを抽出し、そこからランダムに5枚選びます。
-- ※レベル1の時は1〜2、レベル10の時は9〜10となります。
-
-### [game.js](file:///C:/Users/Owner/Documents/myproject/Triple%20Triad/game.js) の修正
-- `initGame(mode, rules, playerHand, npcLevel)` のように、第4引数でNPCレベルを受け取るように拡張します。
-- `p2Hand` を `drawNPCCards(npcLevel)` で初期化します。
-
-### [main.js](file:///C:/Users/Owner/Documents/myproject/Triple%20Triad/main.js) の修正
-- `finalizeStartGame` にて、画面から選択されているNPCレベルを取得し、`initGame` へ渡します。
+### コレクション画面 UIの強化 (`index.html`, `style.css`)
+- コレクション画面内にある「STATS PANEL」を拡張し、「詳細戦績ボタン」を追加、またはパネル自体を広げて詳細を表示できるようにします。
+- **表示内容案**:
+  - レベル別勝率一覧表（アコーディオン形式などでコンパクトに）
+  - 最大点差勝利記録のハイライト
+  - 直近5〜10件の対戦履歴リスト
 
 ## 3. 検証プラン
-- [ ] タイトル画面でNPCレベルが1〜10まで選択できること。
-- [ ] レベル1を選んだ時、NPCの手札がレベル1〜2のカードのみで構成されること。
-- [ ] レベル10を選んだ時、NPCが強力なカード（レベル9〜10）を使用してくること。
-- [ ] 自動デプロイ後、公開サイトで正常にレベル選択・反映が行われること。
+- [ ] 古いバージョンからのセーブデータ互換性（すでにセーブデータがある場合、追記処理がクラッシュしないか）。
+- [ ] CPU戦以外（PvPモード）の場合でも、エラーなく汎用的な記録（PvPとして）が残ること。
+- [ ] コレクション画面で、レイアウトを崩さずに詳細情報が閲覧できること。

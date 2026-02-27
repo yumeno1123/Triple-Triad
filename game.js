@@ -369,4 +369,86 @@ function addCardToInventory(cardId) {
     saveInventory();
 }
 
+
+/* Player Statistics (Win/Loss Records) */
+let playerStats = {
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    levelStats: {},   // { "1": {wins:0, losses:0, draws:0}, ... }
+    maxScoreDiff: 0,  // 最大点差勝利
+    recentMatches: [] // { date, opponent, myScore, enemyScore, result }
+};
+
+function loadStats() {
+    const saved = localStorage.getItem('triple_triad_stats');
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            playerStats = { ...playerStats, ...parsed };
+            // 古いデータ形式の補完
+            if (!playerStats.levelStats) playerStats.levelStats = {};
+            if (!playerStats.recentMatches) playerStats.recentMatches = [];
+            if (playerStats.maxScoreDiff === undefined) playerStats.maxScoreDiff = 0;
+        } catch (e) {
+            console.error("Failed to parse stats", e);
+        }
+    }
+}
+
+function saveStats() {
+    localStorage.setItem('triple_triad_stats', JSON.stringify(playerStats));
+}
+
+function updateStats(details) {
+    const result = typeof details === 'string' ? details : details.result;
+    const myScore = details.myScore !== undefined ? details.myScore : 0;
+    const enemyScore = details.enemyScore !== undefined ? details.enemyScore : 0;
+    const opponentLevel = details.opponentLevel || 5;
+    const mode = details.mode || 'pvp';
+
+    if (result === 'win') playerStats.wins++;
+    else if (result === 'loss') playerStats.losses++;
+    else if (result === 'draw') playerStats.draws++;
+
+    // CPU戦のレベル別記録
+    if (mode === 'pvc') {
+        if (!playerStats.levelStats[opponentLevel]) {
+            playerStats.levelStats[opponentLevel] = { wins: 0, losses: 0, draws: 0 };
+        }
+        if (result === 'win') playerStats.levelStats[opponentLevel].wins++;
+        else if (result === 'loss') playerStats.levelStats[opponentLevel].losses++;
+        else if (result === 'draw') playerStats.levelStats[opponentLevel].draws++;
+    }
+
+    // 最大点差記録
+    if (result === 'win') {
+        const diff = myScore - enemyScore;
+        if (diff > playerStats.maxScoreDiff) {
+            playerStats.maxScoreDiff = diff;
+        }
+    }
+
+    // 履歴の記録
+    const dateStr = new Date().toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const opponentName = mode === 'pvc' ? `CPU LV${opponentLevel}` : '対人戦 (PvP)';
+
+    playerStats.recentMatches.unshift({
+        date: dateStr,
+        opponent: opponentName,
+        myScore: myScore,
+        enemyScore: enemyScore,
+        result: result
+    });
+
+    // 履歴は最大10件まで
+    if (playerStats.recentMatches.length > 10) {
+        playerStats.recentMatches.pop();
+    }
+
+    saveStats();
+}
+
+// 初期化時に読み込み
 loadInventory();
+loadStats();
