@@ -1222,3 +1222,60 @@ body {
     color: #ddd;
 }
 
+
+/* --- Legendary Card Corners (Level 10) --- */
+.legendary-corner {
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    z-index: 5;
+    pointer-events: none;
+    /* Draw a glowing intricate border corner */
+    border: 3px solid #FFD700;
+    filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.8));
+    animation: legendaryShine 2s infinite alternate ease-in-out;
+}
+
+.legendary-corner::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px 3px rgba(255,215,0,0.8);
+}
+
+.legendary-corner.top-left {
+    top: -2px; left: -2px;
+    border-right: none; border-bottom: none;
+    border-top-left-radius: 8px;
+}
+.legendary-corner.top-left::after { top: -3px; left: -3px; }
+
+.legendary-corner.top-right {
+    top: -2px; right: -2px;
+    border-left: none; border-bottom: none;
+    border-top-right-radius: 8px;
+}
+.legendary-corner.top-right::after { top: -3px; right: -3px; }
+
+.legendary-corner.bottom-left {
+    bottom: -2px; left: -2px;
+    border-right: none; border-top: none;
+    border-bottom-left-radius: 8px;
+}
+.legendary-corner.bottom-left::after { bottom: -3px; left: -3px; }
+
+.legendary-corner.bottom-right {
+    bottom: -2px; right: -2px;
+    border-left: none; border-top: none;
+    border-bottom-right-radius: 8px;
+}
+.legendary-corner.bottom-right::after { bottom: -3px; right: -3px; }
+
+@keyframes legendaryShine {
+    0% { filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.5)); border-color: rgba(255, 215, 0, 0.8); }
+    100% { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 1)); border-color: #fff; }
+}
+

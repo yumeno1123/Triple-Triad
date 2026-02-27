@@ -156,7 +156,7 @@ function createCardElement(cardInfo, owner = 'neutral', uniqueId) {
     const card = document.createElement('div');
     card.classList.add('card');
     card.classList.add(`owner-${owner}`);
-    if (cardInfo.level >= 9) card.classList.add('card-rare');
+    if (cardInfo.level >= 8) card.classList.add('card-rare');
     if (cardInfo.level <= 5) card.classList.add('card-common');
     if (uniqueId) card.id = uniqueId;
 
@@ -170,9 +170,18 @@ function createCardElement(cardInfo, owner = 'neutral', uniqueId) {
     const bClass = cardInfo.stats[2] === 10 ? 'stat-a' : '';
     const lClass = cardInfo.stats[3] === 10 ? 'stat-a' : '';
 
+    // レベル10専用の四隅装飾
+    const legendaryDecorations = cardInfo.level === 10 ? `
+        <div class="legendary-corner top-left"></div>
+        <div class="legendary-corner top-right"></div>
+        <div class="legendary-corner bottom-left"></div>
+        <div class="legendary-corner bottom-right"></div>
+    ` : '';
+
     card.innerHTML = `
         <div class="card-inner">
             <div class="card-front">
+                ${legendaryDecorations}
                 <img src="assets/cards/${cardInfo.id}.webp" class="card-image" onerror="this.style.display='none'">
                 <div class="card-stats">
                     <div class="stat stat-top ${tClass}">${formatStat(cardInfo.stats[0])}</div>
