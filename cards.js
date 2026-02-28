@@ -179,10 +179,28 @@ function createCardElement(cardInfo, owner = 'neutral', uniqueId) {
         <div class="legendary-corner bottom-right"></div>
     ` : '';
 
+    // 属性アイコンの生成
+    const elementIcons = {
+        fire: '🔥',
+        ice: '❄️',
+        thunder: '⚡',
+        earth: '⛰️',
+        wind: '🌪️',
+        water: '💧',
+        poison: '☣️',
+        holy: '✨'
+    };
+    const elementSymbol = cardInfo.element ? `
+        <div class="card-element" data-element="${cardInfo.element}">
+            ${elementIcons[cardInfo.element] || ''}
+        </div>
+    ` : '';
+
     card.innerHTML = `
         <div class="card-inner">
             <div class="card-front">
                 ${legendaryDecorations}
+                ${elementSymbol}
                 <img src="assets/cards/${cardInfo.id}.webp" class="card-image" onerror="this.style.display='none'">
                 <div class="card-stats">
                     <div class="stat stat-top ${tClass}">${formatStat(cardInfo.stats[0])}</div>

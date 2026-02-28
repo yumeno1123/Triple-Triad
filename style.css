@@ -603,6 +603,25 @@ body {
     pointer-events: none;
 }
 
+/* カードの属性アイコン */
+.card-element {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    font-size: 1rem;
+    z-index: 5;
+    pointer-events: none;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
 .card-common .card-name {
     color: #c0c0c0;
     /* シルバー */
