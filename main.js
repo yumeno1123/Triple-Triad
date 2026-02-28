@@ -23,6 +23,7 @@ const btnPvc = document.getElementById('btn-pvc');
 const btnBackTitle = document.getElementById('btn-back-title');
 const btnCollection = document.getElementById('btn-collection');
 const btnCollectionBack = document.getElementById('btn-collection-back');
+const btnCollectionBackTop = document.getElementById('btn-collection-back-top');
 const btnHelp = document.getElementById('btn-help');
 const btnHelpClose = document.getElementById('btn-help-close');
 const btnDeckBack = document.getElementById('btn-deck-back');
@@ -62,6 +63,7 @@ btnBackTitle.addEventListener('click', () => {
 });
 btnCollection.addEventListener('click', showCollectionScreen);
 btnCollectionBack.addEventListener('click', showTitleScreen);
+btnCollectionBackTop.addEventListener('click', showTitleScreen);
 btnHelp.addEventListener('click', showHelpScreen);
 btnHelpClose.addEventListener('click', hideHelpScreen);
 btnDeckBack.addEventListener('click', showTitleScreen);
