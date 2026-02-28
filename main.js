@@ -5,6 +5,8 @@
 
 // グローバルなDOM要素
 const screenTitle = document.getElementById('screen-title');
+const screenStory = document.getElementById('screen-story');
+const screenFreeBattle = document.getElementById('screen-free-battle');
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
 const screenTrade = document.getElementById('screen-trade');
@@ -12,6 +14,10 @@ const screenCollection = document.getElementById('screen-collection');
 const screenHelp = document.getElementById('screen-help');
 const screenDeckEdit = document.getElementById('screen-deck-edit');
 
+const btnStory = document.getElementById('btn-story');
+const btnFreeBattle = document.getElementById('btn-free-battle');
+const btnStoryBack = document.getElementById('btn-story-back');
+const btnFreeBattleBack = document.getElementById('btn-free-battle-back');
 const btnPvp = document.getElementById('btn-pvp');
 const btnPvc = document.getElementById('btn-pvc');
 const btnBackTitle = document.getElementById('btn-back-title');
@@ -39,6 +45,10 @@ let p1SelectedDeck = [];
 let p2SelectedDeck = [];
 
 /* --- イベントリスナーの登録 --- */
+btnStory.addEventListener('click', showStoryScreen);
+btnFreeBattle.addEventListener('click', showFreeBattleScreen);
+btnStoryBack.addEventListener('click', showTitleScreen);
+btnFreeBattleBack.addEventListener('click', showTitleScreen);
 btnPvp.addEventListener('click', () => prepareGame('pvp'));
 btnPvc.addEventListener('click', () => prepareGame('pvc'));
 btnBackTitle.addEventListener('click', showTitleScreen);
@@ -296,24 +306,122 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
     screenGame.classList.remove('hidden');
     screenGame.classList.add('active');
 
-    const rules = {
-        open: document.getElementById('rule-open').checked,
-        same: document.getElementById('rule-same').checked,
-        sameWall: document.getElementById('rule-same-wall').checked,
-        plus: document.getElementById('rule-plus').checked,
-        suddenDeath: document.getElementById('rule-sudden-death').checked,
-        elemental: document.getElementById('rule-elemental').checked,
-        tradeRule: document.getElementById('select-trade-rule').value,
-        matchType: matchType
-    };
+    let rules;
+    let npcLevel = parseInt(document.getElementById('npc-level-input').value) || 5;
+
+    if (mode === 'story' && currentStoryNpcId) {
+        const npc = NPC_DATA.find(n => n.id === currentStoryNpcId);
+        if (npc) {
+            rules = {
+                open: npc.rules.includes('open'),
+                same: npc.rules.includes('same'),
+                sameWall: npc.rules.includes('same-wall') || npc.rules.includes('samewall'),
+                plus: npc.rules.includes('plus'),
+                suddenDeath: npc.rules.includes('sudden-death') || npc.rules.includes('suddendeath'),
+                elemental: npc.rules.includes('elemental'),
+                tradeRule: 'one',
+                matchType: 'advance' // ストーリーモードは自分の手札から使う
+            };
+            npcLevel = npc.baseLevel;
+        }
+    } else {
+        rules = {
+            open: document.getElementById('rule-open').checked,
+            same: document.getElementById('rule-same').checked,
+            sameWall: document.getElementById('rule-same-wall').checked,
+            plus: document.getElementById('rule-plus').checked,
+            suddenDeath: document.getElementById('rule-sudden-death').checked,
+            elemental: document.getElementById('rule-elemental').checked,
+            tradeRule: document.getElementById('select-trade-rule').value,
+            matchType: matchType
+        };
+    }
 
     const container = document.getElementById('game-container');
     if (rules.open) container.classList.add('rules-open');
     else container.classList.remove('rules-open');
 
-    // 選択したデッキとNPCレベルを渡して初期化
-    const npcLevel = parseInt(document.getElementById('npc-level-input').value) || 5;
-    initGame(mode, rules, p1Deck, npcLevel, p2Deck);
+    const internalMode = (mode === 'story') ? 'pvc' : mode;
+    initGame(internalMode, rules, p1Deck, npcLevel, p2Deck);
+}
+
+/* --- ストーリーモード関連の管理 --- */
+let defeatedNPCs = [];
+let currentStoryNpcId = null;
+
+function loadStoryProgress() {
+    const saved = localStorage.getItem('tripleTriadStoryProgress');
+    if (saved) {
+        try {
+            defeatedNPCs = JSON.parse(saved);
+        } catch (e) {
+            defeatedNPCs = [];
+        }
+    }
+}
+
+function saveStoryProgress() {
+    localStorage.setItem('tripleTriadStoryProgress', JSON.stringify(defeatedNPCs));
+}
+
+window.renderStoryNPCList = function () {
+    loadStoryProgress();
+    const container = document.getElementById('story-npc-list');
+    container.innerHTML = '';
+
+    if (typeof NPC_DATA === 'undefined') {
+        container.innerHTML = '<p>NPCデータが見つかりません</p>';
+        return;
+    }
+
+    NPC_DATA.forEach(npc => {
+        const isUnlocked = !npc.unlockCondition || defeatedNPCs.includes(npc.unlockCondition);
+        const isDefeated = defeatedNPCs.includes(npc.id);
+
+        const card = document.createElement('div');
+        card.className = `npc-card ${isUnlocked ? 'unlocked' : 'locked'} ${isDefeated ? 'defeated' : ''}`;
+
+        if (isUnlocked) {
+            const rulesText = npc.rules.length > 0 ? npc.rules.map(r => r.toUpperCase()).join(', ') : 'なし';
+            card.innerHTML = `
+                <div class="npc-info">
+                    <div class="npc-header">
+                        <h3>${npc.name}</h3>
+                        ${isDefeated ? '<span class="beaten-badge">CLEAR!</span>' : ''}
+                    </div>
+                    <p class="npc-desc">${npc.description}</p>
+                    <div class="npc-rules">特殊ルール: <span>${rulesText}</span></div>
+                    <div class="npc-rules">NPCの強さ設定: LV<span>${npc.baseLevel}</span></div>
+                </div>
+                <div class="npc-action">
+                    <button class="btn-primary btn-challenge" data-id="${npc.id}">挑戦する</button>
+                </div>
+            `;
+            card.querySelector('.btn-challenge').addEventListener('click', () => startStoryBattle(npc.id));
+        } else {
+            card.innerHTML = `
+                <div class="npc-info">
+                    <div class="npc-header">
+                        <h3>???</h3>
+                    </div>
+                    <p class="npc-desc">解放条件を満たしていません</p>
+                </div>
+            `;
+        }
+        container.appendChild(card);
+    });
+};
+
+function startStoryBattle(npcId) {
+    const npc = NPC_DATA.find(n => n.id === npcId);
+    if (!npc) return;
+
+    currentStoryNpcId = npcId;
+    pendingGameMode = 'story';
+    currentSelectingPlayer = 'p1';
+
+    // ストーリーモード時は自分の手持ちカードから選ぶ「アドバンス」仕様
+    showDeckEditScreen('advance', 'p1');
 }
 
 function startGame(mode) {
@@ -322,9 +430,32 @@ function startGame(mode) {
     prepareGame(mode);
 }
 
+function showStoryScreen() {
+    [screenTitle, screenFreeBattle, screenGame, screenResult, screenTrade, screenCollection, screenHelp, screenDeckEdit].forEach(s => {
+        if (s) {
+            s.classList.remove('active');
+            s.classList.add('hidden');
+        }
+    });
+    screenStory.classList.remove('hidden');
+    screenStory.classList.add('active');
+    renderStoryNPCList(); // 追加実装予定
+}
+
+function showFreeBattleScreen() {
+    [screenTitle, screenStory, screenGame, screenResult, screenTrade, screenCollection, screenHelp, screenDeckEdit].forEach(s => {
+        if (s) {
+            s.classList.remove('active');
+            s.classList.add('hidden');
+        }
+    });
+    screenFreeBattle.classList.remove('hidden');
+    screenFreeBattle.classList.add('active');
+}
+
 function showTitleScreen() {
     document.getElementById('game-container').classList.remove('rules-open');
-    [screenGame, screenResult, screenTrade, screenCollection, screenHelp, screenDeckEdit].forEach(s => {
+    [screenStory, screenFreeBattle, screenGame, screenResult, screenTrade, screenCollection, screenHelp, screenDeckEdit].forEach(s => {
         if (s) {
             s.classList.remove('active');
             s.classList.add('hidden');
@@ -620,6 +751,8 @@ function showResultScreen(result) {
     // 既存の動的メッセージ（トレード結果など）をクリア
     const oldMsg = resultBox.querySelector('.trade-message-area');
     if (oldMsg) oldMsg.remove();
+    const oldStoryMsg = resultBox.querySelector('.story-unlock-message');
+    if (oldStoryMsg) oldStoryMsg.remove();
 
     // アニメーションを再トリガーするために一時的に非表示→表示するテクニック
     const titleEl = document.getElementById('result-title');
@@ -636,6 +769,25 @@ function showResultScreen(result) {
         titleEl.style.color = 'var(--color-p1)';
         screenResult.classList.add('win-effect');
         updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+
+        // ストーリーモードで勝利かつ未討伐のNPCだった場合の進行処理
+        if (pendingGameMode === 'story' && currentStoryNpcId) {
+            if (!defeatedNPCs.includes(currentStoryNpcId)) {
+                defeatedNPCs.push(currentStoryNpcId);
+                saveStoryProgress();
+
+                setTimeout(() => {
+                    const msg = document.createElement('div');
+                    msg.className = 'story-unlock-message';
+                    msg.innerHTML = '【STORY CLEAR】新たなNPCが解放されました！';
+                    msg.style.color = '#FFD700';
+                    msg.style.marginTop = '15px';
+                    msg.style.fontSize = '1.2rem';
+                    msg.style.fontWeight = 'bold';
+                    resultBox.appendChild(msg);
+                }, 2500);
+            }
+        }
     }
     else if (result.winner === 'p2') {
         if (typeof playSE === 'function') playSE('lose');
