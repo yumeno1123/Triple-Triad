@@ -120,8 +120,13 @@ function showDeckEditScreen(matchType, player = 'p1') {
         titleEl.textContent = `DECK EDIT (PLAYER ${player === 'p1' ? '1' : '2'})`;
     }
 
-    screenTitle.classList.remove('active');
-    screenTitle.classList.add('hidden');
+    [screenTitle, screenStory, screenFreeBattle].forEach(s => {
+        if (s) {
+            s.classList.remove('active');
+            s.classList.add('hidden');
+        }
+    });
+
     screenDeckEdit.classList.remove('hidden');
     screenDeckEdit.classList.add('active');
 
@@ -301,8 +306,13 @@ function finalizeStartGame() {
 }
 
 function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
-    screenDeckEdit.classList.remove('active');
-    screenDeckEdit.classList.add('hidden');
+    [screenDeckEdit, screenStory, screenFreeBattle, screenTitle].forEach(s => {
+        if (s) {
+            s.classList.remove('active');
+            s.classList.add('hidden');
+        }
+    });
+
     screenGame.classList.remove('hidden');
     screenGame.classList.add('active');
 
