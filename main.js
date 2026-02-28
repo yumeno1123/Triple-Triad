@@ -844,7 +844,9 @@ function saveRuleSettings() {
         plus: document.getElementById('rule-plus').checked,
         suddenDeath: document.getElementById('rule-sudden-death').checked,
         randomHand: document.getElementById('rule-random-hand').checked,
-        tradeRule: document.getElementById('select-trade-rule').value
+        tradeRule: document.getElementById('select-trade-rule').value,
+        matchMode: document.querySelector('input[name="match-mode"]:checked')?.value || 'free',
+        npcLevel: document.getElementById('npc-level-input').value
     };
     localStorage.setItem('triple_triad_rules', JSON.stringify(rules));
 }
@@ -861,6 +863,13 @@ function loadRuleSettings() {
             if (rules.suddenDeath !== undefined) document.getElementById('rule-sudden-death').checked = rules.suddenDeath;
             if (rules.randomHand !== undefined) document.getElementById('rule-random-hand').checked = rules.randomHand;
             if (rules.tradeRule !== undefined) document.getElementById('select-trade-rule').value = rules.tradeRule;
+            if (rules.matchMode !== undefined) {
+                const radio = document.querySelector(`input[name="match-mode"][value="${rules.matchMode}"]`);
+                if (radio) radio.checked = true;
+            }
+            if (rules.npcLevel !== undefined) {
+                document.getElementById('npc-level-input').value = rules.npcLevel;
+            }
         } catch (e) {
             console.error('Failed to parse rule settings', e);
         }
@@ -874,6 +883,13 @@ function loadRuleSettings() {
 });
 const tradeSelect = document.getElementById('select-trade-rule');
 if (tradeSelect) tradeSelect.addEventListener('change', saveRuleSettings);
+
+// マッチタイプとNPCレベルのリスナー追加
+document.querySelectorAll('input[name="match-mode"]').forEach(radio => {
+    radio.addEventListener('change', saveRuleSettings);
+});
+const npcLevelInput = document.getElementById('npc-level-input');
+if (npcLevelInput) npcLevelInput.addEventListener('change', saveRuleSettings);
 
 // Load at startup
 loadRuleSettings();
