@@ -777,6 +777,14 @@ function startSuddenDeath() {
 }
 
 function showResultScreen(result) {
+    if (pendingGameMode === 'story') {
+        btnBackTitle.textContent = 'ストーリー選択へ戻る';
+    } else if (pendingGameMode === 'pvp' || pendingGameMode === 'pvc') {
+        btnBackTitle.textContent = 'フリーバトルへ戻る';
+    } else {
+        btnBackTitle.textContent = 'タイトルへ戻る';
+    }
+
     screenResult.classList.remove('hidden', 'win-effect', 'lose-effect');
     screenResult.classList.add('active');
 
