@@ -23,7 +23,7 @@ let gameConfig = {
     matchType: 'free'
 };
 
-function initGame(mode, rules = null, playerHand = null, npcLevel = 5) {
+function initGame(mode, rules = null, playerHand = null, npcLevel = 5, player2Hand = null) {
     gameMode = mode;
     if (rules) {
         gameConfig = {
@@ -41,8 +41,12 @@ function initGame(mode, rules = null, playerHand = null, npcLevel = 5) {
     // プレイヤーの手札が指定されていればそれを使用、そうでなければランダム
     p1Hand = playerHand ? [...playerHand] : drawRandomCards(5);
 
-    // NPCの手札生成: CPU戦なら指定レベルに基づき、PvPなら完全ランダム
-    p2Hand = (gameMode === 'pvc') ? drawNPCCards(npcLevel) : drawRandomCards(5);
+    // NPCの手札生成: CPU戦なら指定レベルに基づき、PvPなら指定されたP2の手札（なければ完全ランダム）
+    if (gameMode === 'pvc') {
+        p2Hand = drawNPCCards(npcLevel);
+    } else {
+        p2Hand = player2Hand ? [...player2Hand] : drawRandomCards(5);
+    }
 
     const finalTurn = Math.random() < 0.5 ? 'p1' : 'p2';
     activeSpecialRules = [];

@@ -34,6 +34,9 @@ const scoreP2 = document.getElementById('score-player2');
 let selectedCardElement = null;
 let playerSelectedDeck = []; // プレイヤーが選んだ5枚
 let pendingGameMode = 'pvp'; // pvp or pvc
+let currentSelectingPlayer = 'p1';
+let p1SelectedDeck = [];
+let p2SelectedDeck = [];
 
 /* --- イベントリスナーの登録 --- */
 btnPvp.addEventListener('click', () => prepareGame('pvp'));
@@ -48,46 +51,65 @@ btnDeckStart.addEventListener('click', () => finalizeStartGame());
 
 function prepareGame(mode) {
     pendingGameMode = mode;
+    currentSelectingPlayer = 'p1';
     const matchType = document.querySelector('input[name="match-mode"]:checked').value;
     const isRandomHand = document.getElementById('rule-random-hand') && document.getElementById('rule-random-hand').checked;
 
     if (isRandomHand) {
         // ランダムハンドON時はデッキ編集をスキップして自動構築
-        playerSelectedDeck = generateRandomHand(matchType);
-        // ランダムハンド発動時はタイトル画面を閉じる
+        p1SelectedDeck = generateRandomHand(matchType);
+        if (mode === 'pvp') {
+            p2SelectedDeck = generateRandomHand(matchType, p1SelectedDeck);
+        } else {
+            p2SelectedDeck = null;
+        }
+
         screenTitle.classList.remove('active');
         screenTitle.classList.add('hidden');
-        finalizeStartGame();
+        startConfiguredGame(mode, matchType, p1SelectedDeck, p2SelectedDeck);
     } else {
-        showDeckEditScreen(matchType);
+        showDeckEditScreen(matchType, 'p1');
     }
 }
 
-function generateRandomHand(matchType) {
+function generateRandomHand(matchType, excludeDeck = []) {
     let pool = [];
     if (matchType === 'free') {
-        // フリーモードはすべてのカードから5枚ランダム（重複あり）
-        for (let i = 0; i < 5; i++) {
-            const randomIdx = Math.floor(Math.random() * CARD_DATA.length);
-            pool.push(CARD_DATA[randomIdx]);
+        for (const card of CARD_DATA) {
+            let maxCount = 5;
+            if (card.level >= 8 || card.id === 'c48') maxCount = 1;
+            const excludedCount = excludeDeck.filter(c => c.id === card.id).length;
+            const availableCount = maxCount - excludedCount;
+            for (let i = 0; i < Math.max(0, availableCount); i++) pool.push(card);
         }
     } else {
-        // アドバンスモードは所持カードすべてをプールに入れてシャッフル
         for (const [id, count] of Object.entries(playerInventory)) {
             const card = CARD_DATA.find(c => c.id === id);
             if (card && count > 0) {
-                for (let i = 0; i < count; i++) {
-                    pool.push(card);
-                }
+                let maxCount = count;
+                if (card.level >= 8 || card.id === 'c48') maxCount = Math.min(count, 1);
+                const excludedCount = excludeDeck.filter(c => c.id === id).length;
+                const availableCount = maxCount - excludedCount;
+                for (let i = 0; i < Math.max(0, availableCount); i++) pool.push({ ...card });
             }
         }
-        // Fisher-Yatesではなくお手軽シャッフル（プールからランダム抽出）
-        pool = pool.sort(() => 0.5 - Math.random());
     }
-    return pool.slice(0, 5);
+    pool = pool.sort(() => 0.5 - Math.random());
+    const hand = pool.slice(0, 5);
+    while (hand.length < 5) {
+        const fallback = CARD_DATA[Math.floor(Math.random() * 5)];
+        hand.push({ ...fallback });
+    }
+    return hand;
 }
 
-function showDeckEditScreen(matchType) {
+function showDeckEditScreen(matchType, player = 'p1') {
+    currentSelectingPlayer = player;
+    const titleEl = document.getElementById('deck-edit-title');
+    if (titleEl) {
+        titleEl.textContent = `DECK EDIT (PLAYER ${player === 'p1' ? '1' : '2'})`;
+    }
+
     screenTitle.classList.remove('active');
     screenTitle.classList.add('hidden');
     screenDeckEdit.classList.remove('hidden');
@@ -158,7 +180,16 @@ function addCardToDeck(card, matchType) {
         maxOwned = Math.min(maxOwned, 1);
     }
 
-    if (currentCountInDeck < maxOwned) {
+    let consumedByP1 = 0;
+    if (currentSelectingPlayer === 'p2') {
+        if (matchType !== 'free') {
+            consumedByP1 = p1SelectedDeck.filter(c => c.id === card.id).length;
+        } else if (card.level >= 8 || card.id === 'c48') {
+            consumedByP1 = p1SelectedDeck.filter(c => c.id === card.id).length;
+        }
+    }
+
+    if (currentCountInDeck < maxOwned - consumedByP1) {
         playerSelectedDeck.push(card);
         updateDeckUI();
     }
@@ -205,7 +236,19 @@ function updateDeckUI() {
             }
         }
 
-        const remaining = maxOwned - countInDeck;
+        let consumedByP1 = 0;
+        if (currentSelectingPlayer === 'p2') {
+            if (matchType !== 'free') {
+                consumedByP1 = p1SelectedDeck.filter(c => c.id === id).length;
+            } else {
+                const cardInfo = CARD_DATA.find(c => c.id === id);
+                if (cardInfo && (cardInfo.level >= 8 || cardInfo.id === 'c48')) {
+                    consumedByP1 = p1SelectedDeck.filter(c => c.id === id).length;
+                }
+            }
+        }
+
+        const remaining = maxOwned - countInDeck - consumedByP1;
 
         const badge = item.querySelector('.card-count-badge');
         if (badge) {
@@ -231,12 +274,28 @@ function updateDeckUI() {
 
 
 function finalizeStartGame() {
+    const matchType = document.querySelector('input[name="match-mode"]:checked')?.value || 'advance';
+
+    if (pendingGameMode === 'pvp' && currentSelectingPlayer === 'p1') {
+        p1SelectedDeck = [...playerSelectedDeck];
+        showDeckEditScreen(matchType, 'p2');
+        return;
+    } else if (pendingGameMode === 'pvp' && currentSelectingPlayer === 'p2') {
+        p2SelectedDeck = [...playerSelectedDeck];
+    } else {
+        p1SelectedDeck = [...playerSelectedDeck];
+        p2SelectedDeck = null;
+    }
+
+    startConfiguredGame(pendingGameMode, matchType, p1SelectedDeck, p2SelectedDeck);
+}
+
+function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
     screenDeckEdit.classList.remove('active');
     screenDeckEdit.classList.add('hidden');
     screenGame.classList.remove('hidden');
     screenGame.classList.add('active');
 
-    const matchType = document.querySelector('input[name="match-mode"]:checked').value;
     const rules = {
         open: document.getElementById('rule-open').checked,
         same: document.getElementById('rule-same').checked,
@@ -253,7 +312,7 @@ function finalizeStartGame() {
 
     // 選択したデッキとNPCレベルを渡して初期化
     const npcLevel = parseInt(document.getElementById('npc-level-input').value) || 5;
-    initGame(pendingGameMode, rules, playerSelectedDeck, npcLevel);
+    initGame(mode, rules, p1Deck, npcLevel, p2Deck);
 }
 
 function startGame(mode) {
