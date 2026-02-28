@@ -54,6 +54,8 @@ btnPvc.addEventListener('click', () => prepareGame('pvc'));
 btnBackTitle.addEventListener('click', () => {
     if (pendingGameMode === 'story') {
         showStoryScreen();
+    } else if (pendingGameMode === 'pvp' || pendingGameMode === 'pvc') {
+        showFreeBattleScreen();
     } else {
         showTitleScreen();
     }
@@ -1084,6 +1086,8 @@ document.getElementById('btn-confirm-trade').addEventListener('click', () => {
         msg.remove();
         if (pendingGameMode === 'story') {
             showStoryScreen();
+        } else if (pendingGameMode === 'pvp' || pendingGameMode === 'pvc') {
+            showFreeBattleScreen();
         } else {
             showTitleScreen();
         }
