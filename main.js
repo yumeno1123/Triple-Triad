@@ -51,7 +51,13 @@ btnStoryBack.addEventListener('click', showTitleScreen);
 btnFreeBattleBack.addEventListener('click', showTitleScreen);
 btnPvp.addEventListener('click', () => prepareGame('pvp'));
 btnPvc.addEventListener('click', () => prepareGame('pvc'));
-btnBackTitle.addEventListener('click', showTitleScreen);
+btnBackTitle.addEventListener('click', () => {
+    if (pendingGameMode === 'story') {
+        showStoryScreen();
+    } else {
+        showTitleScreen();
+    }
+});
 btnCollection.addEventListener('click', showCollectionScreen);
 btnCollectionBack.addEventListener('click', showTitleScreen);
 btnHelp.addEventListener('click', showHelpScreen);
@@ -1076,7 +1082,11 @@ document.getElementById('btn-confirm-trade').addEventListener('click', () => {
     document.getElementById('screen-trade').appendChild(msg);
     setTimeout(() => {
         msg.remove();
-        showTitleScreen();
+        if (pendingGameMode === 'story') {
+            showStoryScreen();
+        } else {
+            showTitleScreen();
+        }
     }, 2000);
 });
 
