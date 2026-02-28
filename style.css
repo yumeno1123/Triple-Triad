@@ -238,29 +238,16 @@ body {
     width: 100%;
 }
 
-.current-deck-area,
 .available-cards-area {
     margin-bottom: 25px;
 }
 
-.current-deck-area h3,
 .available-cards-area h3 {
     font-size: 0.85rem;
     color: var(--text-muted);
     margin-bottom: 12px;
     padding-left: 10px;
     border-left: 3px solid var(--color-p1);
-}
-
-.deck-slots {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    padding: 15px;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 15px;
-    min-height: 140px;
-    flex-wrap: wrap;
 }
 
 .deck-grid {

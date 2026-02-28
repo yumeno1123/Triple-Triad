@@ -28,6 +28,7 @@ const btnHelp = document.getElementById('btn-help');
 const btnHelpClose = document.getElementById('btn-help-close');
 const btnDeckBack = document.getElementById('btn-deck-back');
 const btnDeckStart = document.getElementById('btn-deck-start');
+const btnDeckReset = document.getElementById('btn-deck-reset');
 
 const gameBoard = document.getElementById('game-board');
 const handP1 = document.getElementById('hand-player1');
@@ -68,6 +69,13 @@ btnHelp.addEventListener('click', showHelpScreen);
 btnHelpClose.addEventListener('click', hideHelpScreen);
 btnDeckBack.addEventListener('click', showTitleScreen);
 btnDeckStart.addEventListener('click', () => finalizeStartGame());
+if (btnDeckReset) {
+    btnDeckReset.addEventListener('click', () => {
+        if (typeof playSE === 'function') playSE('click');
+        playerSelectedDeck = [];
+        updateDeckUI();
+    });
+}
 
 function prepareGame(mode) {
     pendingGameMode = mode;
@@ -221,26 +229,6 @@ function addCardToDeck(card, matchType) {
 }
 
 function updateDeckUI() {
-    const slots = document.getElementById('deck-slots');
-    slots.innerHTML = '';
-
-    for (let i = 0; i < 5; i++) {
-        const slot = document.createElement('div');
-        slot.className = 'deck-slot';
-        if (playerSelectedDeck[i]) {
-            const cardEl = createCardElement(playerSelectedDeck[i]);
-            slot.appendChild(cardEl);
-            // スロット内のカードをクリックで外す（インデックス指定で確実に消す）
-            slot.addEventListener('click', () => {
-                playerSelectedDeck.splice(i, 1);
-                updateDeckUI();
-            });
-        } else {
-            slot.innerHTML = '<div class="empty-slot">?</div>';
-        }
-        slots.appendChild(slot);
-    }
-
     document.getElementById('selected-count').textContent = playerSelectedDeck.length;
     btnDeckStart.disabled = playerSelectedDeck.length < 5;
 
