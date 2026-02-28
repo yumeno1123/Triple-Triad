@@ -634,6 +634,18 @@ body {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
+.card-element[data-element="poison"] {
+    color: #4CAF50;
+    /* 緑 */
+    text-shadow: 0 0 5px #4CAF50;
+}
+
+.card-element[data-element="thunder"] {
+    color: #FFEB3B;
+    /* 黄色 */
+    text-shadow: 0 0 5px #FFEB3B;
+}
+
 .card-common .card-name {
     color: #c0c0c0;
     /* シルバー */
