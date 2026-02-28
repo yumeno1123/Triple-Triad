@@ -8,6 +8,7 @@ let p1Hand = [];
 let p2Hand = [];
 let currentTurn = 'p1';
 let gameMode = 'pvp';
+let elementalBoard = new Array(9).fill(null);
 
 // 発動した特殊ルールの記録用（UI表示のため）
 let activeSpecialRules = [];
@@ -19,6 +20,7 @@ let gameConfig = {
     sameWall: true,
     plus: true,
     suddenDeath: true,
+    elemental: false,
     tradeRule: 'one',
     matchType: 'free'
 };
@@ -34,6 +36,21 @@ function initGame(mode, rules = null, playerHand = null, npcLevel = 5, player2Ha
     }
 
     boardState = new Array(9).fill(null);
+    elementalBoard = new Array(9).fill(null);
+
+    // エレメンタルボードのランダム生成
+    if (gameConfig.elemental) {
+        const elements = ['fire', 'ice', 'thunder', 'earth', 'poison', 'wind', 'water', 'holy'];
+        const numSpots = Math.floor(Math.random() * 3) + 1; // 1〜3マス
+        let availablePositions = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        for (let i = 0; i < numSpots; i++) {
+            const posIdx = Math.floor(Math.random() * availablePositions.length);
+            const pos = availablePositions.splice(posIdx, 1)[0];
+            const elIdx = Math.floor(Math.random() * elements.length);
+            elementalBoard[pos] = elements[elIdx];
+        }
+    }
+
     // 生成前に前回の状態をクリアしておく（フィルタリング誤作動防止）
     p1Hand = [];
     p2Hand = [];
@@ -155,10 +172,21 @@ function placeCardOnBoard(boardIndex, cardInfo, owner) {
         return { flipped: [], rules: [] };
     }
 
+    let mod = 0;
+    if (gameConfig.elemental && elementalBoard[boardIndex]) {
+        if (cardInfo.element === elementalBoard[boardIndex]) {
+            mod = 1;
+        } else {
+            mod = -1;
+        }
+    }
+
     boardState[boardIndex] = {
         id: cardInfo.id,
         owner: owner,
-        stats: [...cardInfo.stats]
+        stats: cardInfo.stats.map(val => Math.min(10, Math.max(1, val + mod))),
+        originalStats: [...cardInfo.stats],
+        elementMod: mod
     };
 
     activeSpecialRules = [];

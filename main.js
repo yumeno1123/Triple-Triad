@@ -302,6 +302,7 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
         sameWall: document.getElementById('rule-same-wall').checked,
         plus: document.getElementById('rule-plus').checked,
         suddenDeath: document.getElementById('rule-sudden-death').checked,
+        elemental: document.getElementById('rule-elemental').checked,
         tradeRule: document.getElementById('select-trade-rule').value,
         matchType: matchType
     };
@@ -346,11 +347,25 @@ function hideHelpScreen() {
 
 window.setupUI = function () {
     gameBoard.innerHTML = '';
+    const elemEmojis = {
+        'fire': '🔥', 'ice': '❄️', 'thunder': '⚡', 'earth': '🪨',
+        'poison': '☠️', 'wind': '🌪️', 'water': '💧', 'holy': '✨'
+    };
+
     for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
         cell.classList.add('board-cell');
         cell.id = `cell-${i}`;
         cell.dataset.index = i;
+
+        if (typeof gameConfig !== 'undefined' && gameConfig.elemental && typeof elementalBoard !== 'undefined' && elementalBoard[i]) {
+            cell.dataset.element = elementalBoard[i];
+            const elIcon = document.createElement('div');
+            elIcon.className = 'element-icon';
+            elIcon.textContent = elemEmojis[elementalBoard[i]] || '';
+            cell.appendChild(elIcon);
+        }
+
         cell.addEventListener('click', () => handleCellClick(i, cell));
         gameBoard.appendChild(cell);
     }
@@ -429,6 +444,15 @@ async function finalizePlacementUI(cellIndex, cellElement, result) {
     clonedCard.style.top = '0';
     clonedCard.style.left = '0';
     clonedCard.classList.remove('played');
+
+    // 属性配置時のステータス補正バッジを描画
+    if (boardState[cellIndex] && boardState[cellIndex].elementMod !== undefined && boardState[cellIndex].elementMod !== 0) {
+        const modBadge = document.createElement('div');
+        modBadge.className = 'element-mod-badge';
+        const mod = boardState[cellIndex].elementMod;
+        modBadge.textContent = mod > 0 ? `+${mod}` : `${mod}`;
+        clonedCard.appendChild(modBadge);
+    }
 
     cellElement.appendChild(clonedCard);
     selectedCardElement = null;
@@ -903,6 +927,7 @@ function saveRuleSettings() {
         plus: document.getElementById('rule-plus').checked,
         suddenDeath: document.getElementById('rule-sudden-death').checked,
         randomHand: document.getElementById('rule-random-hand').checked,
+        elemental: document.getElementById('rule-elemental').checked,
         tradeRule: document.getElementById('select-trade-rule').value,
         matchMode: document.querySelector('input[name="match-mode"]:checked')?.value || 'free',
         npcLevel: document.getElementById('npc-level-input').value
@@ -921,6 +946,7 @@ function loadRuleSettings() {
             if (rules.plus !== undefined) document.getElementById('rule-plus').checked = rules.plus;
             if (rules.suddenDeath !== undefined) document.getElementById('rule-sudden-death').checked = rules.suddenDeath;
             if (rules.randomHand !== undefined) document.getElementById('rule-random-hand').checked = rules.randomHand;
+            if (rules.elemental !== undefined) document.getElementById('rule-elemental').checked = rules.elemental;
             if (rules.tradeRule !== undefined) document.getElementById('select-trade-rule').value = rules.tradeRule;
             if (rules.matchMode !== undefined) {
                 const radio = document.querySelector(`input[name="match-mode"][value="${rules.matchMode}"]`);
@@ -936,7 +962,7 @@ function loadRuleSettings() {
 }
 
 // Attach listeners
-['rule-open', 'rule-same', 'rule-same-wall', 'rule-plus', 'rule-sudden-death', 'rule-random-hand'].forEach(id => {
+['rule-open', 'rule-same', 'rule-same-wall', 'rule-plus', 'rule-sudden-death', 'rule-random-hand', 'rule-elemental'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', saveRuleSettings);
 });
