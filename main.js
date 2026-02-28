@@ -430,7 +430,7 @@ window.renderStoryNPCList = function () {
                     </div>
                     <p class="npc-desc">${npc.description}</p>
                     <div class="npc-rules">特殊ルール: <span>${rulesText}</span></div>
-                    <div class="npc-rules">NPCの強さ設定: LV<span>${npc.baseLevel}</span></div>
+                    <div class="npc-rules">NPCの強さ設定: <span>${npc.id === 'npc_00' ? 'チュートリアル' : 'LV ' + npc.baseLevel}</span></div>
                 </div>
                 <div class="npc-action">
                     <button class="btn-primary btn-challenge" data-id="${npc.id}">挑戦する</button>
