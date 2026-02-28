@@ -472,6 +472,11 @@ body {
     transform-style: preserve-3d;
 }
 
+/* オープンルール非適用時、相手(Player 2)の手札を裏向きにする */
+#game-container:not(.rules-open) #hand-player2 .card:not(.played) .card-inner {
+    transform: rotateY(180deg);
+}
+
 .flip-anim {
     transform: rotateY(180deg);
 }
@@ -555,9 +560,22 @@ body {
 }
 
 .card-back {
-    background: #1a1a1a;
+    background: radial-gradient(circle, #2a2a3a 0%, #111 100%);
     transform: rotateY(180deg);
-    border: 2px solid #444;
+    border: 2px solid #555;
+    position: relative;
+}
+
+.card-back::after {
+    content: "TT";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    color: rgba(255, 255, 255, 0.1);
+    letter-spacing: -5px;
 }
 
 .card-stats {
