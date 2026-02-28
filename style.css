@@ -405,6 +405,18 @@ body {
     padding: 10px;
 }
 
+.active-rules-display {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #ffd700;
+    margin-top: 5px;
+    font-family: var(--font-heading);
+    letter-spacing: 2px;
+    min-height: 1.2rem;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+    z-index: 10;
+}
+
 .board {
     display: grid;
     grid-template-columns: repeat(3, var(--card-width));

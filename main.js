@@ -359,6 +359,24 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
     if (rules.open) container.classList.add('rules-open');
     else container.classList.remove('rules-open');
 
+    // ルール表示の更新
+    const activeRules = [];
+    if (rules.open) activeRules.push('Open');
+    if (rules.same) activeRules.push('Same');
+    if (rules.sameWall) activeRules.push('Same Wall');
+    if (rules.plus) activeRules.push('Plus');
+    if (rules.suddenDeath) activeRules.push('Sudden Death');
+    if (rules.elemental) activeRules.push('Elemental');
+
+    const rulesDisplay = document.getElementById('active-rules-display');
+    if (rulesDisplay) {
+        if (activeRules.length > 0) {
+            rulesDisplay.textContent = 'RULES: ' + activeRules.join(' / ');
+        } else {
+            rulesDisplay.textContent = 'RULES: None';
+        }
+    }
+
     const internalMode = (mode === 'story') ? 'pvc' : mode;
     initGame(internalMode, rules, p1Deck, npcLevel, p2Deck);
 }
