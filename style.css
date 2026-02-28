@@ -417,6 +417,55 @@ body {
     z-index: 10;
 }
 
+/* チュートリアルメッセージ */
+.tutorial-message-box {
+    margin: 10px auto;
+    width: 90%;
+    max-width: 400px;
+    background: rgba(0, 50, 150, 0.8);
+    border: 2px solid #64B5F6;
+    border-radius: 10px;
+    padding: 15px;
+    color: white;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(100, 181, 246, 0.5);
+    z-index: 20;
+    transition: opacity 0.3s;
+}
+
+.tutorial-message-box.hidden {
+    display: none;
+    opacity: 0;
+}
+
+/* チュートリアル用のハイライトエフェクト */
+.highlight-tutorial {
+    outline: 4px solid #64B5F6 !important;
+    box-shadow: 0 0 20px #64B5F6 !important;
+    animation: pulseTutorial 1.5s infinite;
+    z-index: 50;
+}
+
+@keyframes pulseTutorial {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px #64B5F6;
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 30px #64B5F6;
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px #64B5F6;
+    }
+}
+
+
 .board {
     display: grid;
     grid-template-columns: repeat(3, var(--card-width));

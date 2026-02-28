@@ -340,7 +340,8 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
                 suddenDeath: npc.rules.includes('sudden-death') || npc.rules.includes('suddendeath'),
                 elemental: npc.rules.includes('elemental'),
                 tradeRule: 'one',
-                matchType: 'advance' // ストーリーモードは自分の手札から使う
+                matchType: 'advance', // ストーリーモードは自分の手札から使う
+                isTutorial: currentStoryNpcId === 'npc_00'
             };
             npcLevel = npc.baseLevel;
         }
@@ -574,6 +575,13 @@ function handleHandCardClick(cardElement, owner) {
     if (gameMode === 'pvc' && owner === 'p2') return;
     if (cardElement.classList.contains('played')) return;
 
+    // チュートリアル制限
+    if (typeof isTutorialMode !== 'undefined' && isTutorialMode) {
+        if (!cardElement.classList.contains('highlight-tutorial')) {
+            return; // 指示されたカード以外は選択不可
+        }
+    }
+
     if (selectedCardElement) {
         selectedCardElement.classList.remove('selected');
     }
@@ -591,6 +599,13 @@ function handleHandCardClick(cardElement, owner) {
 
 async function handleCellClick(index, cellElement) {
     if (!selectedCardElement || boardState[index] !== null) return;
+
+    // チュートリアル制限
+    if (typeof isTutorialMode !== 'undefined' && isTutorialMode) {
+        if (!cellElement.classList.contains('highlight-tutorial')) {
+            return; // 指示されたマス以外は配置不可
+        }
+    }
 
     const cardId = selectedCardElement.dataset.id;
     const owner = selectedCardElement.dataset.owner;
@@ -726,7 +741,24 @@ window.checkAndEndTurn = function () {
         currentTurn = currentTurn === 'p1' ? 'p2' : 'p1';
         updateTurnDisplay();
         if (gameMode === 'pvc' && currentTurn === 'p2') {
-            setTimeout(playCPUTurn, 1000);
+            if (typeof isTutorialMode !== 'undefined' && isTutorialMode) {
+                // チュートリアル中のAIターンはスクリプトで制御
+                if (tutorialStep === 1) {
+                    tutorialStep = 2;
+                    advanceTutorialStep();
+                } else if (tutorialStep === 3) {
+                    tutorialStep = 4;
+                    advanceTutorialStep();
+                }
+            } else {
+                setTimeout(playCPUTurn, 1000);
+            }
+        } else if (currentTurn === 'p1' && typeof isTutorialMode !== 'undefined' && isTutorialMode) {
+            // 教官配置後、P1のターンになったときの進行
+            if (tutorialStep === 2) {
+                tutorialStep = 3;
+                advanceTutorialStep();
+            }
         }
     }
 };

@@ -8,13 +8,22 @@
  */
 const NPC_DATA = [
     {
+        id: 'npc_00',
+        name: 'チュートリアル教官',
+        description: 'カードの置き方と裏返しの基本ルールを教えてくれる。まずはここから始めよう！',
+        deckType: 'fixed',
+        fixedDeck: ['c2', 'c3', 'c4', 'c5', 'c7'], // ゲスパーなどを固定手札に
+        rules: [],
+        unlockCondition: null
+    },
+    {
         id: 'npc_01',
         name: 'バラムガーデン門下生',
         description: 'カードゲームの初心者。ルールを覚えるのに最適。',
         deckType: 'level',
         baseLevel: 1,
         rules: [],
-        unlockCondition: null
+        unlockCondition: 'npc_00'
     },
     {
         id: 'npc_02',

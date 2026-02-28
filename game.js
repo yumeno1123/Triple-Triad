@@ -13,6 +13,10 @@ let elementalBoard = new Array(9).fill(null);
 // 発動した特殊ルールの記録用（UI表示のため）
 let activeSpecialRules = [];
 
+// チュートリアル用状態管理
+let isTutorialMode = false;
+let tutorialStep = 0;
+
 // ルールの有効化設定
 let gameConfig = {
     open: true,
@@ -55,34 +59,58 @@ function initGame(mode, rules = null, playerHand = null, npcLevel = 5, player2Ha
     p1Hand = [];
     p2Hand = [];
 
-    // プレイヤーの手札が指定されていればそれを使用、そうでなければランダム
-    p1Hand = playerHand ? [...playerHand] : drawRandomCards(5);
+    isTutorialMode = gameConfig.isTutorial || false;
+    tutorialStep = isTutorialMode ? 1 : 0;
 
-    // NPCの手札生成: CPU戦なら指定レベルに基づき、PvPなら指定されたP2の手札（なければ完全ランダム）
-    if (gameMode === 'pvc') {
-        p2Hand = drawNPCCards(npcLevel);
+    if (isTutorialMode) {
+        // チュートリアル用の固定手札（分かりやすいカードを選択）
+        p1Hand = ['c1', 'c8', 'c10', 'c12', 'c13'].map(id => {
+            const c = CARD_DATA.find(card => card.id === id);
+            return { ...c, stats: [...c.stats] };
+        });
+        p2Hand = ['c2', 'c3', 'c4', 'c5', 'c7'].map(id => {
+            const c = CARD_DATA.find(card => card.id === id);
+            return { ...c, stats: [...c.stats] };
+        });
     } else {
-        p2Hand = player2Hand ? [...player2Hand] : drawRandomCards(5);
+        // プレイヤーの手札が指定されていればそれを使用、そうでなければランダム
+        p1Hand = playerHand ? [...playerHand] : drawRandomCards(5);
+
+        // NPCの手札生成: CPU戦なら指定レベルに基づき、PvPなら指定されたP2の手札（なければ完全ランダム）
+        if (gameMode === 'pvc') {
+            p2Hand = drawNPCCards(npcLevel);
+        } else {
+            p2Hand = player2Hand ? [...player2Hand] : drawRandomCards(5);
+        }
     }
 
-    const finalTurn = Math.random() < 0.5 ? 'p1' : 'p2';
+    const finalTurn = isTutorialMode ? 'p1' : (Math.random() < 0.5 ? 'p1' : 'p2');
     activeSpecialRules = [];
 
     // UIを初期化するが、操作は一旦ブロック
     currentTurn = finalTurn;
     setupUI();
 
-    // ルーレット演出の呼び出し
-    playTurnRoulette(finalTurn, () => {
-        // 演出完了後のゲーム開始処理
-        const startText = currentTurn === 'p1' ? 'PLAYER 1 START!' : (gameMode === 'pvc' ? 'CPU START!' : 'PLAYER 2 START!');
-        const color = currentTurn === 'p1' ? 'var(--color-p1)' : 'var(--color-p2)';
+    if (isTutorialMode) {
+        const startText = 'TUTORIAL START!';
+        const color = 'var(--color-p1)';
         showGameStartEffect(startText, color);
+        setTimeout(() => {
+            advanceTutorialStep();
+        }, 2000);
+    } else {
+        // ルーレット演出の呼び出し
+        playTurnRoulette(finalTurn, () => {
+            // 演出完了後のゲーム開始処理
+            const startText = currentTurn === 'p1' ? 'PLAYER 1 START!' : (gameMode === 'pvc' ? 'CPU START!' : 'PLAYER 2 START!');
+            const color = currentTurn === 'p1' ? 'var(--color-p1)' : 'var(--color-p2)';
+            showGameStartEffect(startText, color);
 
-        if (gameMode === 'pvc' && currentTurn === 'p2') {
-            setTimeout(playCPUTurn, 2000);
-        }
-    });
+            if (gameMode === 'pvc' && currentTurn === 'p2') {
+                setTimeout(playCPUTurn, 2000);
+            }
+        });
+    }
 }
 
 function playTurnRoulette(finalTurn, onComplete) {
@@ -529,3 +557,59 @@ function updateStats(details) {
 // 初期化時に読み込み
 loadInventory();
 loadStats();
+
+// ==========================================
+// チュートリアル用 スクリプトイベント制御
+// ==========================================
+window.advanceTutorialStep = function () {
+    const box = document.getElementById('tutorial-message-box');
+    const text = document.getElementById('tutorial-text');
+    if (!box || !text) return;
+
+    box.classList.remove('hidden');
+
+    // ハイライトクリア
+    document.querySelectorAll('.card.highlight-tutorial').forEach(el => el.classList.remove('highlight-tutorial'));
+    document.querySelectorAll('.board-cell.highlight-tutorial').forEach(el => el.classList.remove('highlight-tutorial'));
+
+    switch (tutorialStep) {
+        case 1:
+            text.innerHTML = '教官：「あなた（青）のターンからだ。<br>まずは手札の『ハウリザード』を選んで、左上のマスに置いてみたまえ。」';
+            const c0 = document.getElementById('p1-card-0'); // ハウリザード
+            if (c0) c0.classList.add('highlight-tutorial');
+            const cell0 = document.getElementById('cell-0'); // 左上
+            if (cell0) cell0.classList.add('highlight-tutorial');
+            break;
+        case 2:
+            text.innerHTML = '教官：「よし、次は私の番だな。」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                setTimeout(() => {
+                    // 教官のカード c2 (フンゴオンゴ) を cell 1 に置く
+                    const cpuCardElement = document.getElementById('p2-card-0');
+                    const cellElement = document.getElementById('cell-1');
+                    if (cpuCardElement && cellElement && typeof executeCPUPlacement === 'function') {
+                        executeCPUPlacement(cpuCardElement, cellElement, 1);
+                    }
+                }, 500);
+            }, 2000);
+            break;
+        case 3:
+            text.innerHTML = '教官：「下に『1』を持つカードだな。<br>キミの手札の『フォカロル(小)』(上:3) を、私のカードのすぐ下のマス（真ん中）に置いてみたまえ！<br>接している数字が相手より大きければ、裏返せるぞ。」';
+            const c1 = document.getElementById('p1-card-1'); // フォカロル小
+            if (c1) c1.classList.add('highlight-tutorial');
+            const cell4 = document.getElementById('cell-4'); // 真ん中の中央
+            if (cell4) cell4.classList.add('highlight-tutorial');
+            break;
+        case 4:
+            text.innerHTML = '教官：「見事に裏返したな！<br>最終的に自分の色のカードが多い状態になれば勝利だ。残りのカードは自由に置いて勝負してみよう！」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                isTutorialMode = false; // チュートリアル終了
+                tutorialStep = 0;
+                // 次のターン（教官の通常ターン）を開始
+                setTimeout(playCPUTurn, 1000);
+            }, 5000);
+            break;
+    }
+};
