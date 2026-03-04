@@ -30,6 +30,7 @@ const btnHelpClose = document.getElementById('btn-help-close');
 const btnDeckBack = document.getElementById('btn-deck-back');
 const btnDeckStart = document.getElementById('btn-deck-start');
 const btnDeckReset = document.getElementById('btn-deck-reset');
+const btnResetData = document.getElementById('btn-reset-data');
 
 const gameBoard = document.getElementById('game-board');
 const handP1 = document.getElementById('hand-player1');
@@ -77,6 +78,9 @@ if (btnDeckReset) {
         playerSelectedDeck = [];
         updateDeckUI();
     });
+}
+if (btnResetData) {
+    btnResetData.addEventListener('click', () => resetAllData());
 }
 
 function prepareGame(mode) {
@@ -1394,6 +1398,23 @@ function unlockAllEverything() {
     }
 
     alert("デバッグモード：すべての要素を解放しました。再読み込みします。");
+    location.reload();
+}
+
+/**
+ * 全セーブデータを一括でリセットする
+ */
+function resetAllData() {
+    if (!confirm("⚠️ 警告：カード所持・ストーリー進行・戦績をすべて初期化します。\nこの操作は取り消せません。本当によろしいですか？")) {
+        return;
+    }
+    // すべてのセーブデータを削除
+    localStorage.removeItem('triple_triad_inventory');
+    localStorage.removeItem('tripleTriadStoryProgress');
+    localStorage.removeItem('triple_triad_stats');
+    localStorage.removeItem('triple_triad_rules');
+
+    alert("データをリセットしました。最初からはじめます。");
     location.reload();
 }
 

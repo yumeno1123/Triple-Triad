@@ -761,6 +761,79 @@ body {
     }
 }
 
+/* ストーリーモードのエリア・NPC切り替え時の余白修正 (visibility:hiddenだと場所をとるため) */
+#story-area-selection.hidden,
+#story-npc-selection.hidden {
+    display: none;
+}
+
+/* 隠しコマンド用：点滅アニメーション */
+.debug-flash {
+    animation: debug-flash-anim 0.15s ease-out;
+}
+
+@keyframes debug-flash-anim {
+    0% {
+        color: #fff;
+        text-shadow: 0 0 10px #fff, 0 0 20px #fff;
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* データリセットセクション */
+.reset-data-section {
+    margin-top: 20px;
+    width: 100%;
+    text-align: center;
+}
+
+.reset-data-section h3 {
+    font-size: 0.9rem;
+    font-family: var(--font-heading);
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    text-align: left;
+    letter-spacing: 2px;
+}
+
+.btn-reset-danger {
+    width: 100%;
+    padding: 12px 20px;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    border-radius: 50px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(180, 30, 30, 0.15);
+    color: #ff6b6b;
+    border: 1px solid rgba(180, 30, 30, 0.5);
+    transition: all 0.3s;
+}
+
+.btn-reset-danger:hover {
+    background: rgba(180, 30, 30, 0.3);
+    border-color: #ff4444;
+    box-shadow: 0 0 15px rgba(180, 30, 30, 0.4);
+}
+
+.btn-reset-danger:active {
+    transform: scale(0.97);
+}
+
+.reset-data-desc {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    text-align: center;
+}
+
 /* 特殊エフェクト */
 .special-rule-effect {
     position: absolute;
