@@ -31,6 +31,9 @@ const btnDeckBack = document.getElementById('btn-deck-back');
 const btnDeckStart = document.getElementById('btn-deck-start');
 const btnDeckReset = document.getElementById('btn-deck-reset');
 const btnResetData = document.getElementById('btn-reset-data');
+const btnSettings = document.getElementById('btn-settings');
+const btnSettingsClose = document.getElementById('btn-settings-close');
+const settingsModal = document.getElementById('settings-modal');
 
 const gameBoard = document.getElementById('game-board');
 const handP1 = document.getElementById('hand-player1');
@@ -81,6 +84,24 @@ if (btnDeckReset) {
 }
 if (btnResetData) {
     btnResetData.addEventListener('click', () => resetAllData());
+}
+if (btnSettings) {
+    btnSettings.addEventListener('click', () => {
+        settingsModal.classList.remove('hidden');
+    });
+}
+if (btnSettingsClose) {
+    btnSettingsClose.addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+    });
+}
+// モーダル外側クリックで閉じる
+if (settingsModal) {
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.classList.add('hidden');
+        }
+    });
 }
 
 function prepareGame(mode) {
