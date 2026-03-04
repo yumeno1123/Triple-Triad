@@ -1327,7 +1327,54 @@ document.addEventListener('DOMContentLoaded', () => {
         document.removeEventListener('click', initAudioOnInteraction);
     };
     document.addEventListener('click', initAudioOnInteraction);
+
+    // デバッグ機能：バージョン表示をクリックで全開放
+    const versionDisplay = document.getElementById('version-display');
+    if (versionDisplay) {
+        versionDisplay.addEventListener('click', () => {
+            unlockAllEverything();
+        });
+    }
 });
+
+/**
+ * デバッグ用：全カード・全機能を一括で解放する
+ */
+function unlockAllEverything() {
+    if (!confirm("デバッグ機能：すべてのカードを取得し、全エリアを解放しますか？\n（現在の進行状況が上書きされます）")) {
+        return;
+    }
+
+    // 1. 全カードの解放 (5枚ずつ、レアは1枚)
+    if (typeof CARD_DATA !== 'undefined' && typeof playerInventory !== 'undefined') {
+        CARD_DATA.forEach(card => {
+            const count = (card.level >= 8 || card.id === 'c48') ? 1 : 5;
+            playerInventory[card.id] = count;
+        });
+        if (typeof saveInventory === 'function') {
+            saveInventory();
+        } else {
+            localStorage.setItem('triple_triad_inventory', JSON.stringify(playerInventory));
+        }
+    }
+
+    // 2. ストーリー全解放 (すべてのNPCをクリア済みに)
+    if (typeof NPC_DATA !== 'undefined' && typeof defeatedNPCs !== 'undefined') {
+        NPC_DATA.forEach(npc => {
+            if (!defeatedNPCs.includes(npc.id)) {
+                defeatedNPCs.push(npc.id);
+            }
+        });
+        if (typeof saveStoryProgress === 'function') {
+            saveStoryProgress();
+        } else {
+            localStorage.setItem('tripleTriadStoryProgress', JSON.stringify(defeatedNPCs));
+        }
+    }
+
+    alert("デバッグモード：すべての要素を解放しました。再読み込みします。");
+    location.reload();
+}
 
 // A helper function to attach click sounds to all primary/secondary buttons globally
 document.addEventListener('click', (e) => {
