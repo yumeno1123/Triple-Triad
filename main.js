@@ -1328,11 +1328,27 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     document.addEventListener('click', initAudioOnInteraction);
 
-    // デバッグ機能：バージョン表示をクリックで全開放
+    // デバッグ機能：バージョン表示を8回連続タップで全開放
     const versionDisplay = document.getElementById('version-display');
+    let debugClickCount = 0;
+    let debugClickTimer = null;
+
     if (versionDisplay) {
         versionDisplay.addEventListener('click', () => {
-            unlockAllEverything();
+            // 前回のタップから500ms以上経過していたらリセット
+            if (debugClickTimer) clearTimeout(debugClickTimer);
+
+            debugClickCount++;
+
+            if (debugClickCount >= 8) {
+                debugClickCount = 0;
+                unlockAllEverything();
+            } else {
+                // 500ms間タップがなければカウンターを0に戻す
+                debugClickTimer = setTimeout(() => {
+                    debugClickCount = 0;
+                }, 500);
+            }
         });
     }
 });
