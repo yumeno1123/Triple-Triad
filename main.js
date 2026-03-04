@@ -131,6 +131,7 @@ function generateRandomHand(matchType, excludeDeck = []) {
     let pool = [];
     if (matchType === 'free') {
         for (const card of CARD_DATA) {
+            if (card.isDebug) continue; // デバッグ用カードは除外
             let maxCount = 5;
             if (card.level >= 8 || card.id === 'c48') maxCount = 1;
             const excludedCount = excludeDeck.filter(c => c.id === card.id).length;
@@ -188,10 +189,10 @@ function renderDeckAvailableCards(matchType) {
     for (let level = 10; level >= 1; level--) {
         let levelCards = [];
         if (matchType === 'free') {
-            levelCards = CARD_DATA.filter(c => c.level === level);
+            levelCards = CARD_DATA.filter(c => c.level === level && !c.isDebug);
         } else {
-            // 所持しているカードのみ
-            levelCards = CARD_DATA.filter(c => c.level === level && playerInventory[c.id] > 0);
+            // 所持しているカードのみ（デバッグ用は除外）
+            levelCards = CARD_DATA.filter(c => c.level === level && playerInventory[c.id] > 0 && !c.isDebug);
         }
 
         if (levelCards.length === 0) continue;
@@ -1159,7 +1160,7 @@ function renderCollection() {
 
     // レベル（10〜1）の降順でグループ化
     for (let level = 10; level >= 1; level--) {
-        const levelCards = CARD_DATA.filter(c => c.level === level);
+        const levelCards = CARD_DATA.filter(c => c.level === level && !c.isDebug);
         if (levelCards.length === 0) continue;
 
         // レベルの見出しを作成

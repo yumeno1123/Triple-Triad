@@ -5,9 +5,9 @@
  */
 const CARD_DATA = [
 
-    // Debug Cards
-    { id: 'test1', level: 1, name: 'テスト(ALL 1)', stats: [1, 1, 1, 1] },
-    { id: 'test2', level: 1, name: 'テスト(ALL 2)', stats: [2, 2, 2, 2] },
+    // デバッグ用カード（通常のゲームプレイでは入手・使用不可）
+    { id: 'test1', level: 1, name: 'テスト(ALL 1)', stats: [1, 1, 1, 1], isDebug: true },
+    { id: 'test2', level: 1, name: 'テスト(ALL 2)', stats: [2, 2, 2, 2], isDebug: true },
 
     // Level 1: Monsters
     { id: 'c1', level: 1, name: 'ハウリザード', stats: [1, 5, 4, 1] },
@@ -261,6 +261,8 @@ function drawRandomCards(count = 5) {
     const playerRareIds = getPlayerRareCardIds();
     const hand = [];
     const deck = CARD_DATA.filter(card => {
+        // デバッグ用カードは通常プレイから除外
+        if (card.isDebug) return false;
         // レアカード（Lv8以上 + コヨコヨ）は、プレイヤーが所持していない場合のみランダムプールに出現する
         if ((card.level >= 8 || card.id === 'c48') && playerRareIds.has(card.id)) {
             return false;
@@ -309,6 +311,7 @@ function drawNPCCards(npcLevel, count = 5) {
     const maxLevel = Math.min(10, npcLevel + 1);
 
     const pool = CARD_DATA.filter(card => {
+        if (card.isDebug) return false; // デバッグ用カードは除外
         if (card.level < minLevel || card.level > maxLevel) return false;
         // レア重複フィルタ（世界に1枚）
         if ((card.level >= 8 || card.id === 'c48') && playerRareIds.has(card.id)) return false;
