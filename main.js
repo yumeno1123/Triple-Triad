@@ -857,7 +857,13 @@ window.checkAndEndTurn = function () {
                 if (tutorialStep === 1) {
                     tutorialStep = 2;
                     advanceTutorialStep();
-                } else if (tutorialStep === 3) {
+                } else if (tutorialStep === 3 && currentStoryNpcId === 'npc_00') {
+                    tutorialStep = 4;
+                    advanceTutorialStep();
+                } else if (tutorialStep === 3 && currentStoryNpcId === 'npc_tut_same') {
+                    tutorialStep = 4;
+                    advanceTutorialStep();
+                } else if (tutorialStep === 3 && currentStoryNpcId === 'npc_tut_combo') {
                     tutorialStep = 4;
                     advanceTutorialStep();
                 }
@@ -868,6 +874,9 @@ window.checkAndEndTurn = function () {
             // 教官配置後、P1のターンになったときの進行
             if (tutorialStep === 2) {
                 tutorialStep = 3;
+                advanceTutorialStep();
+            } else if (tutorialStep === 4 && currentStoryNpcId !== 'npc_00') {
+                tutorialStep = 5;
                 advanceTutorialStep();
             }
         }

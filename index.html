@@ -246,12 +246,13 @@
             </header>
             <div id="active-rules-display" class="active-rules-display"></div>
 
-            <!-- チュートリアル用メッセージ -->
-            <div id="tutorial-message-box" class="tutorial-message-box hidden">
-                <p id="tutorial-text"></p>
-            </div>
+
 
             <div class="game-area">
+                <!-- チュートリアル用メッセージ (盤面を押し出さないよう、相手手札に重ねて表示) -->
+                <div id="tutorial-message-box" class="tutorial-message-box hidden">
+                    <p id="tutorial-text"></p>
+                </div>
                 <!-- Player 2 (CPU) の手札：上側に配置 -->
                 <div class="hand-area player2-hand" id="hand-player2"></div>
 

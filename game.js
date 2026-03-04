@@ -664,6 +664,7 @@ function runSameTutorial(box, text) {
             }, 3000);
             break;
         case 2:
+            currentTurn = 'p1'; // プレイヤーのターンに強制
             text.innerHTML = '教官（セイム）：「さあ、キミの番だ。<br>手札の『プリヌラ (上:2, 右:5)』を、先ほど私が置いたカードの**すぐ下**に置いてみたまえ。<br>「私のカード(下:1)」と「キミのカード(上:2)」が接するな。」';
             const c_p1 = document.getElementById('p1-card-0'); // プリヌラ
             if (c_p1) c_p1.classList.add('highlight-tutorial');
@@ -684,6 +685,7 @@ function runSameTutorial(box, text) {
             }, 2500);
             break;
         case 4:
+            currentTurn = 'p1'; // プレイヤーのターンに強制
             text.innerHTML = '教官（セイム）：「キミの手札に『フンゴオンゴ (右:3, 下:1)』があるな。<br>それを**私のカード(左と上)**の間に挟むように置いてみろ！<br>接する2箇所の数字がピッタリ同じになるはずだ！」';
             const c_p2 = document.getElementById('p1-card-1'); // フンゴオンゴ
             if (c_p2) c_p2.classList.add('highlight-tutorial');
@@ -723,6 +725,7 @@ function runPlusTutorial(box, text) {
             }, 500);
             break;
         case 3:
+            currentTurn = 'p1'; // プレイヤーのターンに強制
             text.innerHTML = '教官（プラス）：「さあ、キミの手札のカードを、２枚のカードの間に置くのだ。<br>接する数字どうしを足し算し、その「合計値」が2箇所以上で同じなら『プラス』が発動する！」';
             const c1 = document.getElementById('p1-card-0');
             if (c1) c1.classList.add('highlight-tutorial');
@@ -749,12 +752,12 @@ function runComboTutorial(box, text) {
                 box.classList.add('hidden');
                 setTimeout(() => {
                     const cpuCard = document.getElementById('p2-card-0');
-                    const cell = document.getElementById('cell-ed'); // 無理な配置を防ぐ
                     if (cpuCard) executeCPUPlacement(cpuCard, document.getElementById('cell-0'), 0);
                 }, 500);
             }, 3000);
             break;
         case 2:
+            currentTurn = 'p1'; // プレイヤーのターンに強制
             text.innerHTML = '教官（コンボ）：「キミは弱いカードを私のカードより下に置いてみろ。」';
             const c1 = document.getElementById('p1-card-1');
             if (c1) c1.classList.add('highlight-tutorial');
@@ -772,6 +775,7 @@ function runComboTutorial(box, text) {
             }, 2000);
             break;
         case 4:
+            currentTurn = 'p1'; // プレイヤーのターンに強制
             text.innerHTML = '教官（コンボ）：「さあ、残った隙間にキミのカードを置くのだ。<br>そこで『セイム』か『プラス』を発動させれば、最初に置いた弱いカードも再配置扱いとなり、そこからさらに相手のカードを奪い取る『連鎖』が生まれるぞ！」';
             const c2 = document.getElementById('p1-card-0');
             if (c2) c2.classList.add('highlight-tutorial');

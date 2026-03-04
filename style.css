@@ -390,6 +390,8 @@ body {
     flex-direction: column;
     justify-content: space-between;
     padding: 10px;
+    position: relative;
+    /* 子要素の絶対配置の基準にする */
 }
 
 .active-rules-display {
@@ -406,20 +408,29 @@ body {
 
 /* チュートリアルメッセージ */
 .tutorial-message-box {
-    margin: 10px auto;
+    position: absolute;
+    top: 10px;
+    /* 相手の手札付近に配置 */
+    left: 50%;
+    transform: translateX(-50%);
     width: 90%;
-    max-width: 400px;
-    background: rgba(0, 50, 150, 0.8);
+    max-width: 420px;
+    background: rgba(0, 40, 120, 0.9);
+    /* 少し濃く視認性を上げる */
     border: 2px solid #64B5F6;
-    border-radius: 10px;
-    padding: 15px;
+    border-radius: 12px;
+    padding: 12px 15px;
     color: white;
     font-family: var(--font-body);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
     text-align: center;
-    box-shadow: 0 0 15px rgba(100, 181, 246, 0.5);
-    z-index: 20;
-    transition: opacity 0.3s;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(100, 181, 246, 0.3);
+    z-index: 100;
+    /* 手札や盤面より手前に表示 */
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    /* メッセージ越しに操作できるようにする */
 }
 
 .tutorial-message-box.hidden {
