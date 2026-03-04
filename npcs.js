@@ -8,7 +8,7 @@
  */
 const AREA_DATA = [
     { id: 'area_tutorial', name: 'チュートリアル', unlockCondition: null },
-    { id: 'area_balamb_garden', name: 'バラムガーデン', unlockCondition: 'npc_tut_combo' },
+    { id: 'area_balamb_garden', name: 'バラムガーデン', unlockCondition: 'npc_tut_same_wall' },
     { id: 'area_dollet', name: 'ドール', unlockCondition: 'npc_05' },
     { id: 'area_galbadia', name: 'ガルバディア', unlockCondition: 'npc_dollet_02' },
     { id: 'area_fh', name: 'F.H.', unlockCondition: 'npc_gal_02' },
@@ -35,7 +35,7 @@ const NPC_DATA = [
         areaId: 'area_tutorial',
         description: '隣接する数字が2箇所以上同じ場合に発動する「セイム」ルールを実地で教えてくれます。',
         deckType: 'fixed',
-        fixedDeck: ['c4', 'c6', 'c10', 'c11', 'c12'],
+        fixedDeck: ['c5', 'c8', 'c10', 'c11', 'c12'],
         rules: ['same'],
         unlockCondition: 'npc_00'
     },
@@ -45,7 +45,7 @@ const NPC_DATA = [
         areaId: 'area_tutorial',
         description: '隣接する数字の「足し算の合計」が2箇所以上同じ場合に発動する「プラス」ルールを教えます。',
         deckType: 'fixed',
-        fixedDeck: ['c21', 'c22', 'c23', 'c24', 'c25'],
+        fixedDeck: ['c21', 'c23', 'c22', 'c24', 'c25'],
         rules: ['plus'],
         unlockCondition: 'npc_tut_same'
     },
@@ -58,6 +58,16 @@ const NPC_DATA = [
         fixedDeck: ['c2', 'c8', 'c14', 'c15', 'c18'],
         rules: ['same', 'plus'],
         unlockCondition: 'npc_tut_plus'
+    },
+    {
+        id: 'npc_tut_same_wall',
+        name: 'チュートリアル教官（ウォールセイム）',
+        areaId: 'area_tutorial',
+        description: '盤面の「壁」を、数字のA（10）として扱う「ウォールセイム」ルールを学びます。',
+        deckType: 'fixed',
+        fixedDeck: ['c53', 'c10', 'c12', 'c13', 'c16'],
+        rules: ['same-wall'],
+        unlockCondition: 'npc_tut_combo'
     },
 
     // --- バラムガーデン ---

@@ -599,6 +599,8 @@ window.advanceTutorialStep = function () {
         runPlusTutorial(box, text);
     } else if (currentStoryNpcId === 'npc_tut_combo') {
         runComboTutorial(box, text);
+    } else if (currentStoryNpcId === 'npc_tut_same_wall') {
+        runWallSameTutorial(box, text);
     } else {
         box.classList.add('hidden');
         isTutorialMode = false;
@@ -655,7 +657,7 @@ function runSameTutorial(box, text) {
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
-                    const cpuCardElement = document.getElementById('p2-card-0'); // レッドマウス [6, 2, 1, 1]
+                    const cpuCardElement = document.getElementById('p2-card-0'); // プリヌラ [2, 5, 3, 1]
                     const cellElement = document.getElementById('cell-4');
                     if (cpuCardElement && cellElement && typeof executeCPUPlacement === 'function') {
                         executeCPUPlacement(cpuCardElement, cellElement, 4);
@@ -665,8 +667,8 @@ function runSameTutorial(box, text) {
             break;
         case 2:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（セイム）：「さあ、キミの番だ。<br>手札の『プリヌラ (上:2, 右:5)』を、先ほど私が置いたカードの**すぐ下**に置いてみたまえ。<br>「私のカード(下:1)」と「キミのカード(上:2)」が接するな。」';
-            const c_p1 = document.getElementById('p1-card-0'); // プリヌラ
+            text.innerHTML = '教官（セイム）：「さあ、キミの番だ。<br>手札の『ハウリザード』を、一番下の真ん中に置いてみたまえ。<br>盤面を埋めて、次の準備をするのだ。」';
+            const c_p1 = document.getElementById('p1-card-1'); // ハウリザード
             if (c_p1) c_p1.classList.add('highlight-tutorial');
             const cell7 = document.getElementById('cell-7'); // 中央下
             if (cell7) cell7.classList.add('highlight-tutorial');
@@ -676,7 +678,7 @@ function runSameTutorial(box, text) {
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
-                    const cpuCardElement = document.getElementById('p2-card-1'); // プリヌラ [2, 5, 3, 1] または類似
+                    const cpuCardElement = document.getElementById('p2-card-1'); // フォカロル(小) [3, 1, 5, 2]
                     const cellElement = document.getElementById('cell-8');
                     if (cpuCardElement && cellElement) {
                         executeCPUPlacement(cpuCardElement, cellElement, 8);
@@ -686,20 +688,20 @@ function runSameTutorial(box, text) {
             break;
         case 4:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（セイム）：「キミの手札に『フンゴオンゴ (右:3, 下:1)』があるな。<br>それを**私のカード(左と上)**の間に挟むように置いてみろ！<br>接する2箇所の数字がピッタリ同じになるはずだ！」';
-            const c_p2 = document.getElementById('p1-card-1'); // フンゴオンゴ
+            text.innerHTML = '教官（セイム）：「キミの手札に『フンゴオンゴ (左:5, 下:1)』があるな。<br>それを**私の2枚のカードの間**（中央右）に置いてみろ！<br>接する2箇所の数字が、両方とも私のカードと同じになるはずだ！」';
+            const c_p2 = document.getElementById('p1-card-0'); // フンゴオンゴ
             if (c_p2) c_p2.classList.add('highlight-tutorial');
             const cell5 = document.getElementById('cell-5'); // 中央右
             if (cell5) cell5.classList.add('highlight-tutorial');
             break;
         case 5:
-            text.innerHTML = '教官（セイム）：「これが『セイム』だ！数字が勝っていなくても奪える強力な技だぞ。<br>残りの勝負は自由に進めたまえ。」';
+            text.innerHTML = '教官（セイム）：「これが『セイム』だ！数字の強さに関係なく、同じ数字なら奪い取れる強力な技だぞ。<br>残りの勝負は自由に進めたまえ。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 isTutorialMode = false;
                 tutorialStep = 0;
                 setTimeout(playCPUTurn, 1000);
-            }, 4000);
+            }, 5000);
             break;
     }
 }
@@ -711,7 +713,7 @@ function runPlusTutorial(box, text) {
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
-                    const cpuCard1 = document.getElementById('p2-card-0');
+                    const cpuCard1 = document.getElementById('p2-card-0'); // ダブルハガー [3, 7, 2, 1] -> 右:7
                     const cell0 = document.getElementById('cell-0');
                     if (cpuCard1 && cell0) executeCPUPlacement(cpuCard1, cell0, 0);
                 }, 500);
@@ -719,21 +721,21 @@ function runPlusTutorial(box, text) {
             break;
         case 2:
             setTimeout(() => {
-                const cpuCard2 = document.getElementById('p2-card-1');
+                const cpuCard2 = document.getElementById('p2-card-1'); // ライフフォビドン [6, 2, 6, 3] -> 左:3
                 const cell2 = document.getElementById('cell-2');
                 if (cpuCard2 && cell2) executeCPUPlacement(cpuCard2, cell2, 2);
             }, 500);
             break;
         case 3:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（プラス）：「さあ、キミの手札のカードを、２枚のカードの間に置くのだ。<br>接する数字どうしを足し算し、その「合計値」が2箇所以上で同じなら『プラス』が発動する！」';
-            const c1 = document.getElementById('p1-card-0');
+            text.innerHTML = '教官（プラス）：「さあ、キミの手札の『プリヌラ (左:1, 右:5)』を、２枚のカードの間に置くのだ。<br>接する数字どうしを足し算してみろ。<br>左側は [7+1=8]、右側は [5+3=8] だな。この『合計値』が2箇所以上で同じなら『プラス』が発動する！」';
+            const c1 = document.getElementById('p1-card-0'); // プリヌラ
             if (c1) c1.classList.add('highlight-tutorial');
             const cell1 = document.getElementById('cell-1'); // 中央上
             if (cell1) cell1.classList.add('highlight-tutorial');
             break;
         case 4:
-            text.innerHTML = '教官（プラス）：「見事だ！それがプラスの力だ。<br>この調子で残りのカードも置いてみせろ！」';
+            text.innerHTML = '教官（プラス）：「見事だ！合計が同じなら、相手の数字に関係なく奪えるのがプラスの力だ。<br>この調子で残りのカードも置いてみせろ！」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 isTutorialMode = false;
@@ -790,6 +792,44 @@ function runComboTutorial(box, text) {
                 tutorialStep = 0;
                 setTimeout(playCPUTurn, 1000);
             }, 5000);
+            break;
+    }
+}
+
+function runWallSameTutorial(box, text) {
+    switch (tutorialStep) {
+        case 1:
+            text.innerHTML = '教官（ウォールセイム）：「次は『ウォールセイム』の極意だ。<br>このルールでは、盤面の外側（壁）を数字の『A（10）』として扱うぞ。<br>まずは私からだ。」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                setTimeout(() => {
+                    const cpuCard = document.getElementById('p2-card-0'); // エルノーイル [5, 6, 3, 7]
+                    const cellElement = document.getElementById('cell-1');
+                    if (cpuCard && cellElement && typeof executeCPUPlacement === 'function') {
+                        executeCPUPlacement(cpuCard, cellElement, 1); // 中央上
+                    }
+                }, 500);
+            }, 3000);
+            break;
+        case 2:
+            currentTurn = 'p1';
+            text.innerHTML = '教官（ウォールセイム）：「さあ、キミの番だ。<br>手札の『パンデモニウム (上:A, 左:7)』を、左上の隅に置いてみろ！<br>上側と左側が『壁』に接するはずだ。」';
+            const c1 = document.getElementById('p1-card-0'); // パンデモニウム
+            if (c1) c1.classList.add('highlight-tutorial');
+            const cell0 = document.getElementById('cell-0'); // 左上
+            if (cell0) cell0.classList.add('highlight-tutorial');
+            break;
+        case 3:
+            text.innerHTML = '教官（ウォールセイム）：「見ての通り、上と左が『壁』と同じ数字（A）として判定され、『セイム』が発動した！<br>さらに、隣の私のカードも巻き込んで裏返したな！」';
+            setTimeout(() => {
+                text.innerHTML = '教官（ウォールセイム）：「壁を利用すれば、強力なカードも一網打尽にできる。<br>あとは自分で工夫して戦ってみたまえ！」';
+                setTimeout(() => {
+                    box.classList.add('hidden');
+                    isTutorialMode = false;
+                    tutorialStep = 0;
+                    setTimeout(playCPUTurn, 1000);
+                }, 4000);
+            }, 4000);
             break;
     }
 }

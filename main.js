@@ -545,9 +545,10 @@ function startStoryBattle(npcId) {
         const p1Deck = [];
         const tutorialP1Cards = {
             'npc_00': ['c1', 'c8', 'c13', 'c16', 'c19'], // 基本
-            'npc_tut_same': ['c5', 'c2', 'c1', 'c3', 'c7'], // セイム用
-            'npc_tut_plus': ['c1', 'c2', 'c3', 'c4', 'c5'], // プラス用
-            'npc_tut_combo': ['c3', 'c1', 'c4', 'c5', 'c6'] // コンボ用
+            'npc_tut_same': ['c2', 'c1', 'c3', 'c7', 'c9'], // セイム用 (c2を入れる)
+            'npc_tut_plus': ['c5', 'c1', 'c2', 'c3', 'c4'], // プラス用 (c5を入れる)
+            'npc_tut_combo': ['c3', 'c1', 'c4', 'c5', 'c6'], // コンボ用
+            'npc_tut_same_wall': ['c93', 'c1', 'c2', 'c3', 'c4'] // ウォールセイム用 (c93 パンデモニウムを入れる)
         };
 
         const handIds = tutorialP1Cards[npc.id] || ['c1', 'c2', 'c3', 'c4', 'c5'];
