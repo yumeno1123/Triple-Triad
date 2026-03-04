@@ -59,19 +59,31 @@ function initGame(mode, rules = null, playerHand = null, npcLevel = 5, player2Ha
     p1Hand = [];
     p2Hand = [];
 
+    // 新チュートリアルNPCまたは旧チュートリアル教官の場合はチュートリアルモードを強制
+    if (typeof currentStoryNpcId !== 'undefined' && currentStoryNpcId &&
+        (currentStoryNpcId.startsWith('npc_tut_') || currentStoryNpcId === 'npc_00')) {
+        gameConfig.isTutorial = true;
+    }
+
     isTutorialMode = gameConfig.isTutorial || false;
     tutorialStep = isTutorialMode ? 1 : 0;
 
     if (isTutorialMode) {
-        // チュートリアル用の固定手札（分かりやすいカードを選択）
-        p1Hand = ['c1', 'c8', 'c10', 'c12', 'c13'].map(id => {
-            const c = CARD_DATA.find(card => card.id === id);
-            return { ...c, stats: [...c.stats] };
-        });
-        p2Hand = ['c2', 'c3', 'c4', 'c5', 'c7'].map(id => {
-            const c = CARD_DATA.find(card => card.id === id);
-            return { ...c, stats: [...c.stats] };
-        });
+        // startStoryBattle から渡された固定手札（p1Deck, p2Deck相当）があればそのまま使う
+        if (playerHand && player2Hand) {
+            p1Hand = [...playerHand];
+            p2Hand = [...player2Hand];
+        } else {
+            // 下位互換：引数なしの場合は旧チュートリアルの固定手札
+            p1Hand = ['c1', 'c8', 'c10', 'c12', 'c13'].map(id => {
+                const c = CARD_DATA.find(card => card.id === id);
+                return { ...c, stats: [...c.stats] };
+            });
+            p2Hand = ['c2', 'c3', 'c4', 'c5', 'c7'].map(id => {
+                const c = CARD_DATA.find(card => card.id === id);
+                return { ...c, stats: [...c.stats] };
+            });
+        }
     } else {
         // プレイヤーの手札が指定されていればそれを使用、そうでなければランダム
         p1Hand = playerHand ? [...playerHand] : drawRandomCards(5);
@@ -220,19 +232,22 @@ function placeCardOnBoard(boardIndex, cardInfo, owner) {
     activeSpecialRules = [];
     let allFlipped = new Set();
 
-    const specialFlipped = checkSpecialRules(boardIndex, owner);
+    const specialResult = checkSpecialRules(boardIndex, owner);
+    const specialFlipped = specialResult.flipped;
+    const comboStarters = specialResult.comboStarters;
+
     specialFlipped.forEach(idx => allFlipped.add(idx));
 
     const normalFlipped = checkNormalBattles(boardIndex, owner);
     normalFlipped.forEach(idx => allFlipped.add(idx));
 
-    if (specialFlipped.length > 0) {
-        let comboQueue = [...specialFlipped];
+    if (comboStarters.length > 0) {
+        let comboQueue = [...comboStarters];
         let hasCombo = false;
 
         while (comboQueue.length > 0) {
             const originIndex = comboQueue.shift();
-            const newlyFlipped = checkNormalBattles(originIndex, boardState[originIndex].owner);
+            const newlyFlipped = checkNormalBattles(originIndex, owner);
 
             newlyFlipped.forEach(idx => {
                 if (!allFlipped.has(idx)) {
@@ -288,6 +303,7 @@ function simulatePlacement(boardIndex, cardInfo, owner) {
 
 function checkSpecialRules(index, owner) {
     const flipped = [];
+    const comboStarters = [];
     const originCard = boardState[index];
     const x = index % 3;
     const y = Math.floor(index / 3);
@@ -347,6 +363,9 @@ function checkSpecialRules(index, owner) {
         if (triggerSame || triggerWallSame) {
             activeSpecialRules.push(triggerWallSame ? 'WALL SAME' : 'SAME');
             cardMatches.forEach(match => {
+                if (!comboStarters.includes(match.index)) {
+                    comboStarters.push(match.index);
+                }
                 if (match.card.owner !== owner) {
                     match.card.owner = owner;
                     flipped.push(match.index);
@@ -372,6 +391,9 @@ function checkSpecialRules(index, owner) {
                     isPlusTriggered = true;
                 }
                 sumMap[sum].forEach(match => {
+                    if (!comboStarters.includes(match.index)) {
+                        comboStarters.push(match.index);
+                    }
                     if (match.card.owner !== owner && !flipped.includes(match.index)) {
                         match.card.owner = owner;
                         flipped.push(match.index);
@@ -381,7 +403,7 @@ function checkSpecialRules(index, owner) {
         }
     }
 
-    return flipped;
+    return { flipped, comboStarters };
 }
 
 function checkNormalBattles(index, owner) {
@@ -568,10 +590,22 @@ window.advanceTutorialStep = function () {
 
     box.classList.remove('hidden');
 
-    // ハイライトクリア
-    document.querySelectorAll('.card.highlight-tutorial').forEach(el => el.classList.remove('highlight-tutorial'));
-    document.querySelectorAll('.board-cell.highlight-tutorial').forEach(el => el.classList.remove('highlight-tutorial'));
+    // どのチュートリアルを実行するか判定
+    if (currentStoryNpcId === 'npc_00') {
+        runBasicTutorial(box, text);
+    } else if (currentStoryNpcId === 'npc_tut_same') {
+        runSameTutorial(box, text);
+    } else if (currentStoryNpcId === 'npc_tut_plus') {
+        runPlusTutorial(box, text);
+    } else if (currentStoryNpcId === 'npc_tut_combo') {
+        runComboTutorial(box, text);
+    } else {
+        box.classList.add('hidden');
+        isTutorialMode = false;
+    }
+};
 
+function runBasicTutorial(box, text) {
     switch (tutorialStep) {
         case 1:
             text.innerHTML = '教官：「あなた（青）のターンからだ。<br>まずは手札の『ハウリザード』を選んで、左上のマスに置いてみたまえ。」';
@@ -612,4 +646,146 @@ window.advanceTutorialStep = function () {
             }, 5000);
             break;
     }
-};
+}
+
+function runSameTutorial(box, text) {
+    switch (tutorialStep) {
+        case 1:
+            text.innerHTML = '教官（セイム）：「セイムの極意を教えよう。<br>まずは私の番だ、中央に置かせてもらうぞ。」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                setTimeout(() => {
+                    const cpuCardElement = document.getElementById('p2-card-0'); // レッドマウス [6, 2, 1, 1]
+                    const cellElement = document.getElementById('cell-4');
+                    if (cpuCardElement && cellElement && typeof executeCPUPlacement === 'function') {
+                        executeCPUPlacement(cpuCardElement, cellElement, 4);
+                    }
+                }, 500);
+            }, 3000);
+            break;
+        case 2:
+            text.innerHTML = '教官（セイム）：「さあ、キミの番だ。<br>手札の『プリヌラ (上:2, 右:5)』を、先ほど私が置いたカードの**すぐ下**に置いてみたまえ。<br>「私のカード(下:1)」と「キミのカード(上:2)」が接するな。」';
+            const c_p1 = document.getElementById('p1-card-0'); // プリヌラ
+            if (c_p1) c_p1.classList.add('highlight-tutorial');
+            const cell7 = document.getElementById('cell-7'); // 中央下
+            if (cell7) cell7.classList.add('highlight-tutorial');
+            break;
+        case 3:
+            text.innerHTML = '教官（セイム）：「次に私は右下に置くぞ。」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                setTimeout(() => {
+                    const cpuCardElement = document.getElementById('p2-card-1'); // プリヌラ [2, 5, 3, 1] または類似
+                    const cellElement = document.getElementById('cell-8');
+                    if (cpuCardElement && cellElement) {
+                        executeCPUPlacement(cpuCardElement, cellElement, 8);
+                    }
+                }, 500);
+            }, 2500);
+            break;
+        case 4:
+            text.innerHTML = '教官（セイム）：「キミの手札に『フンゴオンゴ (右:3, 下:1)』があるな。<br>それを**私のカード(左と上)**の間に挟むように置いてみろ！<br>接する2箇所の数字がピッタリ同じになるはずだ！」';
+            const c_p2 = document.getElementById('p1-card-1'); // フンゴオンゴ
+            if (c_p2) c_p2.classList.add('highlight-tutorial');
+            const cell5 = document.getElementById('cell-5'); // 中央右
+            if (cell5) cell5.classList.add('highlight-tutorial');
+            break;
+        case 5:
+            text.innerHTML = '教官（セイム）：「これが『セイム』だ！数字が勝っていなくても奪える強力な技だぞ。<br>残りの勝負は自由に進めたまえ。」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                isTutorialMode = false;
+                tutorialStep = 0;
+                setTimeout(playCPUTurn, 1000);
+            }, 4000);
+            break;
+    }
+}
+
+function runPlusTutorial(box, text) {
+    switch (tutorialStep) {
+        case 1:
+            text.innerHTML = '教官（プラス）：「プラスのルールを教えるぞ。<br>私が2枚のカードを配置するまで待つように。」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                setTimeout(() => {
+                    const cpuCard1 = document.getElementById('p2-card-0');
+                    const cell0 = document.getElementById('cell-0');
+                    if (cpuCard1 && cell0) executeCPUPlacement(cpuCard1, cell0, 0);
+                }, 500);
+            }, 3000);
+            break;
+        case 2:
+            setTimeout(() => {
+                const cpuCard2 = document.getElementById('p2-card-1');
+                const cell2 = document.getElementById('cell-2');
+                if (cpuCard2 && cell2) executeCPUPlacement(cpuCard2, cell2, 2);
+            }, 500);
+            break;
+        case 3:
+            text.innerHTML = '教官（プラス）：「さあ、キミの手札のカードを、２枚のカードの間に置くのだ。<br>接する数字どうしを足し算し、その「合計値」が2箇所以上で同じなら『プラス』が発動する！」';
+            const c1 = document.getElementById('p1-card-0');
+            if (c1) c1.classList.add('highlight-tutorial');
+            const cell1 = document.getElementById('cell-1'); // 中央上
+            if (cell1) cell1.classList.add('highlight-tutorial');
+            break;
+        case 4:
+            text.innerHTML = '教官（プラス）：「見事だ！それがプラスの力だ。<br>この調子で残りのカードも置いてみせろ！」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                isTutorialMode = false;
+                tutorialStep = 0;
+                setTimeout(playCPUTurn, 1000);
+            }, 4000);
+            break;
+    }
+}
+
+function runComboTutorial(box, text) {
+    switch (tutorialStep) {
+        case 1:
+            text.innerHTML = '教官（コンボ）：「連鎖（コンボ）の恐ろしさを叩き込んでやろう。<br>まずは下準備だ。」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                setTimeout(() => {
+                    const cpuCard = document.getElementById('p2-card-0');
+                    const cell = document.getElementById('cell-ed'); // 無理な配置を防ぐ
+                    if (cpuCard) executeCPUPlacement(cpuCard, document.getElementById('cell-0'), 0);
+                }, 500);
+            }, 3000);
+            break;
+        case 2:
+            text.innerHTML = '教官（コンボ）：「キミは弱いカードを私のカードより下に置いてみろ。」';
+            const c1 = document.getElementById('p1-card-1');
+            if (c1) c1.classList.add('highlight-tutorial');
+            const cell4 = document.getElementById('cell-4');
+            if (cell4) cell4.classList.add('highlight-tutorial');
+            break;
+        case 3:
+            text.innerHTML = '教官（コンボ）：「よし、私もカードを置こう。」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                setTimeout(() => {
+                    const cpuCard = document.getElementById('p2-card-1');
+                    executeCPUPlacement(cpuCard, document.getElementById('cell-6'), 6);
+                }, 500);
+            }, 2000);
+            break;
+        case 4:
+            text.innerHTML = '教官（コンボ）：「さあ、残った隙間にキミのカードを置くのだ。<br>そこで『セイム』か『プラス』を発動させれば、最初に置いた弱いカードも再配置扱いとなり、そこからさらに相手のカードを奪い取る『連鎖』が生まれるぞ！」';
+            const c2 = document.getElementById('p1-card-0');
+            if (c2) c2.classList.add('highlight-tutorial');
+            const cell7 = document.getElementById('cell-7');
+            if (cell7) cell7.classList.add('highlight-tutorial');
+            break;
+        case 5:
+            text.innerHTML = '教官（コンボ）：「これが連鎖だ。弱いカードも配置次第で強力な武器になる。<br>あとは実戦で学ぶがいい！」';
+            setTimeout(() => {
+                box.classList.add('hidden');
+                isTutorialMode = false;
+                tutorialStep = 0;
+                setTimeout(playCPUTurn, 1000);
+            }, 5000);
+            break;
+    }
+}

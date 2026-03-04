@@ -78,9 +78,29 @@
             <div class="screen-scroll-wrapper">
                 <h2 style="font-family: var(--font-heading); color: var(--color-p1); margin-bottom: 20px;">STORY MODE
                 </h2>
-                <div id="story-npc-list" class="story-npc-list">
-                    <!-- JSにて動的にNPC要素を生成 -->
+
+                <div class="story-interface">
+                    <!-- エリア選択 -->
+                    <div id="story-area-selection">
+                        <h3 style="margin-bottom: 10px; color: var(--color-p1);">エリアを選択</h3>
+                        <div id="story-area-list" class="story-npc-list">
+                            <!-- JSにて動的にエリア要素を生成 -->
+                        </div>
+                    </div>
+
+                    <!-- エリア内NPC選択 (初期非表示) -->
+                    <div id="story-npc-selection" class="hidden">
+                        <button id="btn-story-area-back" class="btn-secondary"
+                            style="margin-bottom: 15px; font-size: 0.9em; padding: 5px 15px;">◀ エリア選択に戻る</button>
+                        <h3 id="story-current-area-name"
+                            style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 5px;">
+                            バラムガーデン</h3>
+                        <div id="story-npc-list" class="story-npc-list">
+                            <!-- JSにて動的にNPC要素を生成 -->
+                        </div>
+                    </div>
                 </div>
+
                 <button id="btn-story-back" class="btn-secondary" style="margin-top: 30px;">タイトルへ戻る</button>
             </div>
         </section>
@@ -346,7 +366,8 @@
                                 盤面にランダムに属性（炎・氷・雷など8種）が付与されたマスが出現します。マスの属性と同じ属性のカードを置くと攻防値が+1、異なる属性（または無属性）のカードを置くと-1の補正を受けます。
                             </li>
                             <li><strong>連鎖（コンボ）</strong>:
-                                セイムやプラスでカードを裏返した時、その裏返したカードが新たに置かれたものとみなされ、隣接する相手カードに対して再度通常の勝敗判定が行われます。</li>
+                                セイムやプラスが発動した際、対象となったカード（すでに置かれている自分のカードも含む）が新たに置かれたものとみなされ、隣接する相手カードに対して再度通常の勝敗（数値比較）判定が行われます。連鎖によってさらなる特殊ルールは発生しません。
+                            </li>
                             <li><strong>サドンデス</strong>: 引き分け（DRAW）になった場合、その時の盤面と手札の「自分の色のカード」を新たな手札として、即座に再戦（延長戦）に突入します。
                             </li>
                         </ul>
@@ -358,7 +379,7 @@
 
         <!-- バージョン情報 -->
         <footer class="game-footer">
-            <div id="version-display" class="version-display">v1.3.3</div>
+            <div id="version-display" class="version-display">v1.3.4</div>
         </footer>
     </div>
 

@@ -5,6 +5,10 @@
  */
 const CARD_DATA = [
 
+    // Debug Cards
+    { id: 'test1', level: 1, name: 'テスト(ALL 1)', stats: [1, 1, 1, 1] },
+    { id: 'test2', level: 1, name: 'テスト(ALL 2)', stats: [2, 2, 2, 2] },
+
     // Level 1: Monsters
     { id: 'c1', level: 1, name: 'ハウリザード', stats: [1, 5, 4, 1] },
     { id: 'c2', level: 1, name: 'フンゴオンゴ', stats: [5, 3, 1, 1] },

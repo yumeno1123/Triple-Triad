@@ -17,6 +17,7 @@ const screenDeckEdit = document.getElementById('screen-deck-edit');
 const btnStory = document.getElementById('btn-story');
 const btnFreeBattle = document.getElementById('btn-free-battle');
 const btnStoryBack = document.getElementById('btn-story-back');
+const btnStoryAreaBack = document.getElementById('btn-story-area-back');
 const btnFreeBattleBack = document.getElementById('btn-free-battle-back');
 const btnPvp = document.getElementById('btn-pvp');
 const btnPvc = document.getElementById('btn-pvc');
@@ -50,6 +51,7 @@ let p2SelectedDeck = [];
 btnStory.addEventListener('click', showStoryScreen);
 btnFreeBattle.addEventListener('click', showFreeBattleScreen);
 btnStoryBack.addEventListener('click', showTitleScreen);
+if (btnStoryAreaBack) btnStoryAreaBack.addEventListener('click', () => showStoryAreaSelection());
 btnFreeBattleBack.addEventListener('click', showTitleScreen);
 btnPvp.addEventListener('click', () => prepareGame('pvp'));
 btnPvc.addEventListener('click', () => prepareGame('pvc'));
@@ -391,7 +393,70 @@ function saveStoryProgress() {
     localStorage.setItem('tripleTriadStoryProgress', JSON.stringify(defeatedNPCs));
 }
 
-window.renderStoryNPCList = function () {
+window.renderStoryAreaList = function () {
+    loadStoryProgress();
+    const container = document.getElementById('story-area-list');
+    container.innerHTML = '';
+
+    if (typeof AREA_DATA === 'undefined') {
+        container.innerHTML = '<p>エリアデータが見つかりません</p>';
+        return;
+    }
+
+    AREA_DATA.forEach(area => {
+        const isUnlocked = !area.unlockCondition || defeatedNPCs.includes(area.unlockCondition);
+
+        const card = document.createElement('div');
+        card.className = `npc-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+        if (isUnlocked) {
+            const areaNPCs = typeof NPC_DATA !== 'undefined' ? NPC_DATA.filter(n => n.areaId === area.id) : [];
+            const defeatedCount = areaNPCs.filter(n => defeatedNPCs.includes(n.id)).length;
+            const totalCount = areaNPCs.length;
+
+            card.innerHTML = `
+                <div class="npc-info">
+                    <div class="npc-header">
+                        <h3>${area.name}</h3>
+                        ${defeatedCount === totalCount && totalCount > 0 ? '<span class="beaten-badge">COMPLETE!</span>' : ''}
+                    </div>
+                    <div class="npc-rules">進行度: <span>${defeatedCount} / ${totalCount}</span></div>
+                </div>
+                <div class="npc-action">
+                    <button class="btn-primary btn-challenge" data-id="${area.id}">移動する</button>
+                </div>
+            `;
+            card.querySelector('.btn-challenge').addEventListener('click', () => {
+                showStoryNPCSelection(area.id, area.name);
+            });
+        } else {
+            card.innerHTML = `
+                <div class="npc-info">
+                    <div class="npc-header">
+                        <h3>???</h3>
+                    </div>
+                    <p class="npc-desc">解放条件を満たしていません</p>
+                </div>
+            `;
+        }
+        container.appendChild(card);
+    });
+};
+
+window.showStoryAreaSelection = function () {
+    document.getElementById('story-npc-selection').classList.add('hidden');
+    document.getElementById('story-area-selection').classList.remove('hidden');
+    renderStoryAreaList();
+};
+
+window.showStoryNPCSelection = function (areaId, areaName) {
+    document.getElementById('story-area-selection').classList.add('hidden');
+    document.getElementById('story-npc-selection').classList.remove('hidden');
+    document.getElementById('story-current-area-name').textContent = areaName;
+    renderStoryNPCList(areaId);
+};
+
+window.renderStoryNPCList = function (areaId) {
     loadStoryProgress();
     const container = document.getElementById('story-npc-list');
     container.innerHTML = '';
@@ -401,7 +466,9 @@ window.renderStoryNPCList = function () {
         return;
     }
 
-    NPC_DATA.forEach(npc => {
+    const filteredNPCs = areaId ? NPC_DATA.filter(n => n.areaId === areaId) : NPC_DATA;
+
+    filteredNPCs.forEach(npc => {
         const isUnlocked = !npc.unlockCondition || defeatedNPCs.includes(npc.unlockCondition);
         const isDefeated = defeatedNPCs.includes(npc.id);
 
@@ -418,7 +485,7 @@ window.renderStoryNPCList = function () {
                     </div>
                     <p class="npc-desc">${npc.description}</p>
                     <div class="npc-rules">特殊ルール: <span>${rulesText}</span></div>
-                    <div class="npc-rules">NPCの強さ設定: <span>${npc.id === 'npc_00' ? 'チュートリアル' : 'LV ' + npc.baseLevel}</span></div>
+                    <div class="npc-rules">NPCの強さ設定: <span>${npc.id.startsWith('npc_tut_') || npc.id === 'npc_00' ? 'チュートリアル' : 'LV ' + npc.baseLevel}</span></div>
                 </div>
                 <div class="npc-action">
                     <button class="btn-primary btn-challenge" data-id="${npc.id}">挑戦する</button>
@@ -447,8 +514,34 @@ function startStoryBattle(npcId) {
     pendingGameMode = 'story';
     currentSelectingPlayer = 'p1';
 
-    // ストーリーモード時は自分の手持ちカードから選ぶ「アドバンス」仕様
-    showDeckEditScreen('advance', 'p1');
+    // チュートリアル教官など、デッキが固定されているNPCの場合はデッキ編集をスキップ
+    if (npc.id.startsWith('npc_tut_') || npc.id === 'npc_00') {
+        const p1Deck = [];
+        const tutorialP1Cards = {
+            'npc_00': ['c1', 'c8', 'c13', 'c16', 'c19'], // 基本
+            'npc_tut_same': ['c5', 'c2', 'c1', 'c3', 'c7'], // セイム用
+            'npc_tut_plus': ['c1', 'c2', 'c3', 'c4', 'c5'], // プラス用
+            'npc_tut_combo': ['c3', 'c1', 'c4', 'c5', 'c6'] // コンボ用
+        };
+
+        const handIds = tutorialP1Cards[npc.id] || ['c1', 'c2', 'c3', 'c4', 'c5'];
+        handIds.forEach(id => {
+            const card = CARD_DATA.find(c => c.id === id);
+            if (card) p1Deck.push({ ...card, stats: [...card.stats] });
+        });
+
+        // 教官側のデッキ生成
+        const p2Deck = [];
+        npc.fixedDeck.forEach(id => {
+            const card = CARD_DATA.find(c => c.id === id);
+            if (card) p2Deck.push({ ...card, stats: [...card.stats] });
+        });
+
+        startConfiguredGame('story', 'advance', p1Deck, p2Deck);
+    } else {
+        // 通常のストーリーモード時は自分の手持ちカードから選ぶ「アドバンス」仕様
+        showDeckEditScreen('advance', 'p1');
+    }
 }
 
 function startGame(mode) {
@@ -466,7 +559,11 @@ function showStoryScreen() {
     });
     screenStory.classList.remove('hidden');
     screenStory.classList.add('active');
-    renderStoryNPCList(); // 追加実装予定
+
+    // エリア選択画面を初期表示
+    if (typeof showStoryAreaSelection === 'function') {
+        showStoryAreaSelection();
+    }
 }
 
 function showFreeBattleScreen() {
