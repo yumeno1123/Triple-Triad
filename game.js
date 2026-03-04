@@ -657,7 +657,7 @@ function runSameTutorial(box, text) {
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
-                    const cpuCardElement = document.getElementById('p2-card-0'); // プリヌラ [2, 5, 3, 1]
+                    const cpuCardElement = document.getElementById('p2-card-0'); // フォカロル(小) [3, 1, 5, 2] → 下:5
                     const cellElement = document.getElementById('cell-4');
                     if (cpuCardElement && cellElement && typeof executeCPUPlacement === 'function') {
                         executeCPUPlacement(cpuCardElement, cellElement, 4);
@@ -678,7 +678,7 @@ function runSameTutorial(box, text) {
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
-                    const cpuCardElement = document.getElementById('p2-card-1'); // フォカロル(小) [3, 1, 5, 2]
+                    const cpuCardElement = document.getElementById('p2-card-1'); // グラット [7, 1, 1, 3] → 左:3
                     const cellElement = document.getElementById('cell-8');
                     if (cpuCardElement && cellElement) {
                         executeCPUPlacement(cpuCardElement, cellElement, 8);
@@ -688,7 +688,7 @@ function runSameTutorial(box, text) {
             break;
         case 4:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（セイム）：「キミの手札に『フンゴオンゴ (左:5, 下:1)』があるな。<br>それを**私の2枚のカードの間**（中央右）に置いてみろ！<br>接する2箇所の数字が、両方とも私のカードと同じになるはずだ！」';
+            text.innerHTML = '教官（セイム）：「キミの手札に『フンゴオンゴ (上:5, 右:3)』があるな。<br>それを私のカード2枚の間（中央右）に置いてみろ！<br>上のカードとは「5」、右下のカードとは「3」が一致して「セイム」が発動するはずだ！」';
             const c_p2 = document.getElementById('p1-card-0'); // フンゴオンゴ
             if (c_p2) c_p2.classList.add('highlight-tutorial');
             const cell5 = document.getElementById('cell-5'); // 中央右

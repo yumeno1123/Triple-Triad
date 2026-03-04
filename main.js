@@ -547,7 +547,7 @@ function startStoryBattle(npcId) {
             'npc_00': ['c1', 'c8', 'c13', 'c16', 'c19'], // 基本
             'npc_tut_same': ['c2', 'c1', 'c3', 'c7', 'c9'], // セイム用 (c2を入れる)
             'npc_tut_plus': ['c5', 'c1', 'c2', 'c3', 'c4'], // プラス用 (c5を入れる)
-            'npc_tut_combo': ['c3', 'c1', 'c4', 'c5', 'c6'], // コンボ用
+            'npc_tut_combo': ['c2', 'c8', 'c4', 'c5', 'c6'], // コンボ用（c2[5,3,1,1]をcell-7, c8[3,1,5,2]をcell-4に置き、CPUのc8[3,1,5,2](cell-6)とセイム発動）
             'npc_tut_same_wall': ['c93', 'c1', 'c2', 'c3', 'c4'] // ウォールセイム用 (c93 パンデモニウムを入れる)
         };
 
@@ -852,34 +852,14 @@ window.checkAndEndTurn = function () {
     } else {
         currentTurn = currentTurn === 'p1' ? 'p2' : 'p1';
         updateTurnDisplay();
-        if (gameMode === 'pvc' && currentTurn === 'p2') {
-            if (typeof isTutorialMode !== 'undefined' && isTutorialMode) {
-                // チュートリアル中のAIターンはスクリプトで制御
-                if (tutorialStep === 1) {
-                    tutorialStep = 2;
-                    advanceTutorialStep();
-                } else if (tutorialStep === 3 && currentStoryNpcId === 'npc_00') {
-                    tutorialStep = 4;
-                    advanceTutorialStep();
-                } else if (tutorialStep === 3 && currentStoryNpcId === 'npc_tut_same') {
-                    tutorialStep = 4;
-                    advanceTutorialStep();
-                } else if (tutorialStep === 3 && currentStoryNpcId === 'npc_tut_combo') {
-                    tutorialStep = 4;
-                    advanceTutorialStep();
-                }
-            } else {
-                setTimeout(playCPUTurn, 1000);
-            }
-        } else if (currentTurn === 'p1' && typeof isTutorialMode !== 'undefined' && isTutorialMode) {
-            // 教官配置後、P1のターンになったときの進行
-            if (tutorialStep === 2) {
-                tutorialStep = 3;
-                advanceTutorialStep();
-            } else if (tutorialStep === 4 && currentStoryNpcId !== 'npc_00') {
-                tutorialStep = 5;
-                advanceTutorialStep();
-            }
+
+        if (typeof isTutorialMode !== 'undefined' && isTutorialMode) {
+            tutorialStep++;
+            advanceTutorialStep();
+            // チュートリアルスクリプトが強制的にターン権を上書きした際のためにUIを更新
+            setTimeout(() => updateTurnDisplay(), 50);
+        } else if (gameMode === 'pvc' && currentTurn === 'p2') {
+            setTimeout(playCPUTurn, 1000);
         }
     }
 };
