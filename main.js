@@ -1335,6 +1335,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (versionDisplay) {
         versionDisplay.addEventListener('click', () => {
+            // 点滅演出：クラスを一度消して付け直すことでアニメーションを再帰的に実行
+            versionDisplay.classList.remove('debug-flash');
+            void versionDisplay.offsetWidth; // 強制リフロー
+            versionDisplay.classList.add('debug-flash');
+
             // 前回のタップから500ms以上経過していたらリセット
             if (debugClickTimer) clearTimeout(debugClickTimer);
 
