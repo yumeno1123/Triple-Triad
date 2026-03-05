@@ -106,24 +106,77 @@ function initGame(mode, rules = null, playerHand = null, npcLevel = 5, player2Ha
     if (isTutorialMode) {
         const startText = 'TUTORIAL START!';
         const color = 'var(--color-p1)';
-        showGameStartEffect(startText, color);
-        setTimeout(() => {
-            advanceTutorialStep();
-        }, 2000);
+
+        // チュートリアルでもルール紹介を表示
+        showRulesIntroAnimation(gameConfig, () => {
+            showGameStartEffect(startText, color);
+            setTimeout(() => {
+                advanceTutorialStep();
+            }, 2000);
+        });
     } else {
         // ルーレット演出の呼び出し
         playTurnRoulette(finalTurn, () => {
-            // 演出完了後のゲーム開始処理
-            const startText = currentTurn === 'p1' ? 'PLAYER 1 START!' : (gameMode === 'pvc' ? 'CPU START!' : 'PLAYER 2 START!');
-            const color = currentTurn === 'p1' ? 'var(--color-p1)' : 'var(--color-p2)';
-            showGameStartEffect(startText, color);
+            // ルール紹介アニメーションを挟んでからゲーム開始テキストを表示
+            showRulesIntroAnimation(gameConfig, () => {
+                const startText = currentTurn === 'p1' ? 'PLAYER 1 START!' : (gameMode === 'pvc' ? 'CPU START!' : 'PLAYER 2 START!');
+                const color = currentTurn === 'p1' ? 'var(--color-p1)' : 'var(--color-p2)';
+                showGameStartEffect(startText, color);
 
-            if (gameMode === 'pvc' && currentTurn === 'p2') {
-                setTimeout(playCPUTurn, 2000);
-            }
+                if (gameMode === 'pvc' && currentTurn === 'p2') {
+                    setTimeout(playCPUTurn, 2000);
+                }
+            });
         });
     }
 }
+
+/**
+ * 試合開始時に適用ルールを1つずつアニメーション表示する
+ * @param {Object} config - gameConfig
+ * @param {Function} onComplete - 全ルール表示後に呼ぶコールバック
+ */
+function showRulesIntroAnimation(config, onComplete) {
+    // 表示するルール名リストを作成
+    const ruleNames = [];
+    if (config.open) ruleNames.push('OPEN');
+    if (config.same) ruleNames.push('SAME');
+    if (config.sameWall) ruleNames.push('SAME WALL');
+    if (config.plus) ruleNames.push('PLUS');
+    if (config.suddenDeath) ruleNames.push('SUDDEN DEATH');
+    if (config.elemental) ruleNames.push('ELEMENTAL');
+
+    // ルールがなければ即コールバック
+    if (ruleNames.length === 0) {
+        onComplete();
+        return;
+    }
+
+    const DISPLAY_MS = 700; // 1ルールあたりの表示時間（CSSアニメーションと合わせる）
+
+    let index = 0;
+    function showNext() {
+        if (index >= ruleNames.length) {
+            onComplete();
+            return;
+        }
+        const ruleName = ruleNames[index++];
+        const el = document.createElement('div');
+        el.className = 'rule-intro-popup'; // style.cssで定義したクラス
+        el.textContent = ruleName;
+        document.getElementById('screen-game').appendChild(el);
+
+        // SEを鳴らす（もし設定されていれば）
+        if (typeof playSE === 'function') playSE('click');
+
+        setTimeout(() => {
+            el.remove();
+            showNext();
+        }, DISPLAY_MS);
+    }
+    showNext();
+}
+
 
 function playTurnRoulette(finalTurn, onComplete) {
     const indicator = document.getElementById('turn-indicator');
@@ -138,14 +191,17 @@ function playTurnRoulette(finalTurn, onComplete) {
     indicator.style.zIndex = '100';
 
     let flashes = 0;
-    // 回数を元の半分程度に減らし、テンポアップ
-    const maxFlashes = 10 + Math.floor(Math.random() * 5);
+    // 回数を1.5倍程度に増やし、じっくり見せる
+    const maxFlashes = 15 + Math.floor(Math.random() * 8);
     let currentShow = 'p1';
     let delay = 15; // 初期のフラッシュ間隔（ミリ秒）
 
     function flash() {
         flashes++;
         currentShow = currentShow === 'p1' ? 'p2' : 'p1';
+
+        // ルーレットの点滅に合わせてSEを鳴らす
+        if (typeof playSE === 'function') playSE('click');
 
         if (flashes >= maxFlashes) {
             // 最終結果で固定
@@ -155,7 +211,10 @@ function playTurnRoulette(finalTurn, onComplete) {
 
             indicator.textContent = text;
             indicator.style.color = color;
-            indicator.style.textShadow = `0 0 15px ${color}`;
+            indicator.style.textShadow = `0 0 25px ${color}, 0 0 40px white`; // 決定時の発光を強化
+
+            // 決定時のSE
+            if (typeof playSE === 'function') playSE('place');
 
             // 結果を画面中央で少し（0.8秒）見せた後、元の位置へスライド移動
             setTimeout(() => {
@@ -185,8 +244,8 @@ function playTurnRoulette(finalTurn, onComplete) {
         indicator.textContent = text;
         indicator.style.color = color;
 
-        // 徐々に遅くする（増分も半分にして短縮）
-        delay += 6;
+        // 徐々に遅くする（時間を伸ばすため増分を調整）
+        delay += 9;
         setTimeout(flash, delay);
     }
 
@@ -653,48 +712,35 @@ function runBasicTutorial(box, text) {
 function runSameTutorial(box, text) {
     switch (tutorialStep) {
         case 1:
-            text.innerHTML = '教官（セイム）：「セイムの極意を教えよう。<br>まずは私の番だ、中央に置かせてもらうぞ。」';
-            setTimeout(() => {
-                box.classList.add('hidden');
-                setTimeout(() => {
-                    const cpuCardElement = document.getElementById('p2-card-0'); // フォカロル(小) [3, 1, 5, 2] → 下:5
-                    const cellElement = document.getElementById('cell-4');
-                    if (cpuCardElement && cellElement && typeof executeCPUPlacement === 'function') {
-                        executeCPUPlacement(cpuCardElement, cellElement, 4);
-                    }
-                }, 500);
-            }, 3000);
+            currentTurn = 'p1';
+            text.innerHTML = '教官（セイム）：「セイムの極意を教えよう。<br>まずはあなたの番だ。手札の『ハウリザード』を左上に置いてみたまえ。」';
+            const c_p1 = document.getElementById('p1-card-0'); // ハウリザード
+            if (c_p1) c_p1.classList.add('highlight-tutorial');
+            const cell0 = document.getElementById('cell-0'); // 左上
+            if (cell0) cell0.classList.add('highlight-tutorial');
             break;
         case 2:
-            currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（セイム）：「さあ、キミの番だ。<br>手札の『ハウリザード』を、一番下の真ん中に置いてみたまえ。<br>盤面を埋めて、次の準備をするのだ。」';
-            const c_p1 = document.getElementById('p1-card-1'); // ハウリザード
-            if (c_p1) c_p1.classList.add('highlight-tutorial');
-            const cell7 = document.getElementById('cell-7'); // 中央下
-            if (cell7) cell7.classList.add('highlight-tutorial');
-            break;
-        case 3:
-            text.innerHTML = '教官（セイム）：「次に私は右下に置くぞ。」';
+            text.innerHTML = '教官（セイム）：「次に私が左下に置くぞ。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
-                    const cpuCardElement = document.getElementById('p2-card-1'); // グラット [7, 1, 1, 3] → 左:3
-                    const cellElement = document.getElementById('cell-8');
-                    if (cpuCardElement && cellElement) {
-                        executeCPUPlacement(cpuCardElement, cellElement, 8);
+                    const cpuCardElement = document.getElementById('p2-card-0'); // プリヌラ
+                    const cellElement = document.getElementById('cell-6');
+                    if (cpuCardElement && cellElement && typeof executeCPUPlacement === 'function') {
+                        executeCPUPlacement(cpuCardElement, cellElement, 6);
                     }
                 }, 500);
             }, 2500);
             break;
-        case 4:
+        case 3:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（セイム）：「キミの手札に『フンゴオンゴ (上:5, 右:3)』があるな。<br>それを私のカード2枚の間（中央右）に置いてみろ！<br>上のカードとは「5」、右下のカードとは「3」が一致して「セイム」が発動するはずだ！」';
-            const c_p2 = document.getElementById('p1-card-0'); // フンゴオンゴ
+            text.innerHTML = '教官（セイム）：「さあ、キミの手札に『ケダチク (上:4, 下:2)』があるな。<br>それをハウリザードとプリヌラの間（左中央）に置いてみろ！<br>上のカードとは「4」、下のカードとは「2」が一致して『セイム』が発動するはずだ！」';
+            const c_p2 = document.getElementById('p1-card-1'); // ケダチク
             if (c_p2) c_p2.classList.add('highlight-tutorial');
-            const cell5 = document.getElementById('cell-5'); // 中央右
-            if (cell5) cell5.classList.add('highlight-tutorial');
+            const cell3 = document.getElementById('cell-3'); // 左中央
+            if (cell3) cell3.classList.add('highlight-tutorial');
             break;
-        case 5:
+        case 4:
             text.innerHTML = '教官（セイム）：「これが『セイム』だ！数字の強さに関係なく、同じ数字なら奪い取れる強力な技だぞ。<br>残りの勝負は自由に進めたまえ。」';
             setTimeout(() => {
                 box.classList.add('hidden');
@@ -728,8 +774,8 @@ function runPlusTutorial(box, text) {
             break;
         case 3:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（プラス）：「さあ、キミの手札の『プリヌラ (左:1, 右:5)』を、２枚のカードの間に置くのだ。<br>接する数字どうしを足し算してみろ。<br>左側は [7+1=8]、右側は [5+3=8] だな。この『合計値』が2箇所以上で同じなら『プラス』が発動する！」';
-            const c1 = document.getElementById('p1-card-0'); // プリヌラ
+            text.innerHTML = '教官（プラス）：「さあ、キミの手札の『ハウリザード (左:1, 右:5)』を、２枚のカードの間に置くのだ。<br>接する数字どうしを足し算してみろ。<br>左側は [7+1=8]、右側は [5+3=8] だな。この『合計値』が2箇所以上で同じなら『プラス』が発動する！」';
+            const c1 = document.getElementById('p1-card-0'); // ハウリザード
             if (c1) c1.classList.add('highlight-tutorial');
             const cell1 = document.getElementById('cell-1'); // 中央上
             if (cell1) cell1.classList.add('highlight-tutorial');
@@ -749,39 +795,39 @@ function runPlusTutorial(box, text) {
 function runComboTutorial(box, text) {
     switch (tutorialStep) {
         case 1:
-            text.innerHTML = '教官（コンボ）：「連鎖（コンボ）の恐ろしさを叩き込んでやろう。<br>まずは下準備だ。」';
+            text.innerHTML = '教官（コンボ）：「連鎖（コンボ）の真髄を見せてやろう。<br>まずは下準備として、私のカードを左中央に置くぞ。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
-                    const cpuCard = document.getElementById('p2-card-0');
-                    if (cpuCard) executeCPUPlacement(cpuCard, document.getElementById('cell-0'), 0);
+                    const cpuCard = document.getElementById('p2-card-0'); // フンゴオンゴ (下1)
+                    if (cpuCard) executeCPUPlacement(cpuCard, document.getElementById('cell-3'), 3);
                 }, 500);
             }, 3000);
             break;
         case 2:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（コンボ）：「キミは弱いカードを私のカードより下に置いてみろ。」';
-            const c1 = document.getElementById('p1-card-1');
+            text.innerHTML = '教官（コンボ）：「次に、キミの手札の『フォカロル(小) (下:5)』を、その右隣（中央）に置いてみたまえ。」';
+            const c1 = document.getElementById('p1-card-1'); // フォカロル小
             if (c1) c1.classList.add('highlight-tutorial');
             const cell4 = document.getElementById('cell-4');
             if (cell4) cell4.classList.add('highlight-tutorial');
             break;
         case 3:
-            text.innerHTML = '教官（コンボ）：「よし、私もカードを置こう。」';
+            text.innerHTML = '教官（コンボ）：「よし、私も左下にカードを置くぞ。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
-                    const cpuCard = document.getElementById('p2-card-1');
+                    const cpuCard = document.getElementById('p2-card-1'); // コカトリス (右6, 上2)
                     executeCPUPlacement(cpuCard, document.getElementById('cell-6'), 6);
                 }, 500);
             }, 2000);
             break;
         case 4:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（コンボ）：「さあ、残った隙間にキミのカードを置くのだ。<br>そこで『セイム』か『プラス』を発動させれば、最初に置いた弱いカードも再配置扱いとなり、そこからさらに相手のカードを奪い取る『連鎖』が生まれるぞ！」';
-            const c2 = document.getElementById('p1-card-0');
+            text.innerHTML = '教官（コンボ）：「さあ、仕上げだ。手札の『ハウリザード (左:1, 上:1)』を、２枚のカードの間に置くのだ。<br>上側は [1+5=6]、左側は [1+5=6] だな。これで『プラス』が発動する！<br>さらに、奪ったカードが隣のカードを数字で上回れば、『連鎖（コンボ）』が次々と発生するぞ！」';
+            const c2 = document.getElementById('p1-card-0'); // ハウリザード
             if (c2) c2.classList.add('highlight-tutorial');
-            const cell7 = document.getElementById('cell-7');
+            const cell7 = document.getElementById('cell-7'); // 下中央
             if (cell7) cell7.classList.add('highlight-tutorial');
             break;
         case 5:

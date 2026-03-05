@@ -144,6 +144,12 @@ function playSE(type) {
             playTone(523.25, t + 0.45, 0.4, 'triangle', masterVol); // C5
             break;
 
+        case 'rule':
+            // 特殊ルール発動時の「ピロリン！」（和音を用いた通知音）
+            playTone(659.25, t, 0.1, 'square', masterVol * 0.6);      // E5
+            playTone(880.00, t + 0.1, 0.2, 'square', masterVol * 0.6); // A5
+            break;
+
         case 'lose':
             // 敗北のどんよりした音（下降アルペジオ）
             playTone(300, t, 0.2, 'sawtooth', masterVol * 0.8);

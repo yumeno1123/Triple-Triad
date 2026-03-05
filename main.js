@@ -551,10 +551,10 @@ function startStoryBattle(npcId) {
         const p1Deck = [];
         const tutorialP1Cards = {
             'npc_00': ['c1', 'c8', 'c13', 'c16', 'c19'], // 基本
-            'npc_tut_same': ['c2', 'c1', 'c3', 'c7', 'c9'], // セイム用 (c2を入れる)
-            'npc_tut_plus': ['c5', 'c1', 'c2', 'c3', 'c4'], // プラス用 (c5を入れる)
-            'npc_tut_combo': ['c2', 'c8', 'c4', 'c5', 'c6'], // コンボ用（c2[5,3,1,1]をcell-7, c8[3,1,5,2]をcell-4に置き、CPUのc8[3,1,5,2](cell-6)とセイム発動）
-            'npc_tut_same_wall': ['c93', 'c1', 'c2', 'c3', 'c4'] // ウォールセイム用 (c93 パンデモニウムを入れる)
+            'npc_tut_same': ['c1', 'c10', 'c22', 'c3', 'c8'], // セイム用 (ハウリザード、ケダチク、グランデアーロを入れる)
+            'npc_tut_plus': ['c1', 'c6', 'c2', 'c3', 'c9'], // プラス用 (c1, c6, c9を入れる)
+            'npc_tut_combo': ['c1', 'c8', 'c9', 'c2', 'c6'], // コンボ用 (ハウリザード, フォカロル小, ブラッドソウルを入れる)
+            'npc_tut_same_wall': ['c93', 'c1', 'c2', 'c3', 'c9'] // ウォールセイム用 (c93 パンデモニウムを入れる)
         };
 
         const handIds = tutorialP1Cards[npc.id] || ['c1', 'c2', 'c3', 'c4', 'c5'];
@@ -773,6 +773,7 @@ async function finalizePlacementUI(cellIndex, cellElement, result) {
 }
 
 function showSpecialRuleEffect(rules) {
+    if (typeof playSE === 'function') playSE('rule');
     const effectContainer = document.createElement('div');
     effectContainer.className = 'special-rule-effect';
     const uniqueRules = [...new Set(rules)];

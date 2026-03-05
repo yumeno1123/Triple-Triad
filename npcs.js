@@ -35,9 +35,9 @@ const NPC_DATA = [
         areaId: 'area_tutorial',
         description: '隣接する数字が2箇所以上同じ場合に発動する「セイム」ルールを実地で教えてくれます。',
         deckType: 'fixed',
-        // c8(フォカロル小:下5)を中央に、c12(グラット:左3)を右下に配置させる
-        // プレイヤーのフンゴオンゴ(上5, 右3)と、2点一致 → セイム成立
-        fixedDeck: ['c8', 'c12', 'c10', 'c11', 'c5'],
+        // c5(プリヌラ:上2)を左下に配置させる
+        // プレイヤーのケダチク(下2, 上4)とハウリザード(下4)で、2点一致 → セイム成立
+        fixedDeck: ['c5', 'c8', 'c12', 'c11', 'c7'],
         rules: ['same'],
         unlockCondition: 'npc_00'
     },
@@ -57,7 +57,7 @@ const NPC_DATA = [
         areaId: 'area_tutorial',
         description: 'セイムやプラスから派生して別のカードを奪う「連鎖（コンボ）」ルールを実地で教えます。',
         deckType: 'fixed',
-        fixedDeck: ['c2', 'c8', 'c14', 'c15', 'c18'],
+        fixedDeck: ['c2', 'c18', 'c14', 'c11', 'c8'],
         rules: ['same', 'plus'],
         unlockCondition: 'npc_tut_plus'
     },
