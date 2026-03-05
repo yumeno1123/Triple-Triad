@@ -403,6 +403,8 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
 /* --- ストーリーモード関連の管理 --- */
 let defeatedNPCs = [];
 let currentStoryNpcId = null;
+let currentStoryAreaId = null;   // 最後に選択したエリアID
+let currentStoryAreaName = null; // 最後に選択したエリア名
 
 function loadStoryProgress() {
     const saved = localStorage.getItem('tripleTriadStoryProgress');
@@ -476,6 +478,10 @@ window.showStoryAreaSelection = function () {
 };
 
 window.showStoryNPCSelection = function (areaId, areaName) {
+    // 最後に選択したエリアを記憶
+    currentStoryAreaId = areaId;
+    currentStoryAreaName = areaName;
+
     document.getElementById('story-area-selection').classList.add('hidden');
     document.getElementById('story-npc-selection').classList.remove('hidden');
     document.getElementById('story-current-area-name').textContent = areaName;
@@ -587,8 +593,10 @@ function showStoryScreen() {
     screenStory.classList.remove('hidden');
     screenStory.classList.add('active');
 
-    // エリア選択画面を初期表示
-    if (typeof showStoryAreaSelection === 'function') {
+    // 最後に選択したエリアがあればそこを表示、なければエリア選択画面を初期表示
+    if (currentStoryAreaId && currentStoryAreaName) {
+        showStoryNPCSelection(currentStoryAreaId, currentStoryAreaName);
+    } else if (typeof showStoryAreaSelection === 'function') {
         showStoryAreaSelection();
     }
 }
@@ -1351,6 +1359,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (versionDisplay) {
         versionDisplay.addEventListener('click', () => {
+            // 設定画面が開いていない場合は何もしない（カウントもリセット）
+            if (settingsModal && settingsModal.classList.contains('hidden')) {
+                debugClickCount = 0;
+                return;
+            }
+
             // 点滅演出：クラスを一度消して付け直すことでアニメーションを再帰的に実行
             versionDisplay.classList.remove('debug-flash');
             void versionDisplay.offsetWidth; // 強制リフロー
