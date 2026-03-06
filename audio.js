@@ -137,11 +137,17 @@ function playSE(type) {
             break;
 
         case 'win':
-            // 勝利の短いファンファーレ（ド・ミ・ソ・ド）
-            playTone(261.63, t, 0.15, 'triangle', masterVol);     // C4
-            playTone(329.63, t + 0.15, 0.15, 'triangle', masterVol); // E4
-            playTone(392.00, t + 0.3, 0.15, 'triangle', masterVol); // G4
-            playTone(523.25, t + 0.45, 0.4, 'triangle', masterVol); // C5
+            // 勝利のファンファーレ
+            const winVol = masterVol * 0.8;
+            playTone(523.25, t, 0.15, 'square', winVol); // C5
+            playTone(523.25, t + 0.15, 0.15, 'square', winVol); // C5
+            playTone(523.25, t + 0.30, 0.15, 'square', winVol); // C5
+            playTone(523.25, t + 0.45, 0.40, 'square', winVol); // C5
+            playTone(415.30, t + 0.85, 0.40, 'square', winVol); // Ab4
+            playTone(466.16, t + 1.25, 0.40, 'square', winVol); // Bb4
+            playTone(523.25, t + 1.65, 0.15, 'square', winVol); // C5
+            playTone(466.16, t + 1.80, 0.15, 'square', winVol); // Bb4
+            playTone(523.25, t + 1.95, 0.80, 'square', winVol); // C5
             break;
 
         case 'rule':

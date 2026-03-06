@@ -679,14 +679,14 @@ window.advanceTutorialStep = function () {
 function runBasicTutorial(box, text) {
     switch (tutorialStep) {
         case 1:
-            text.innerHTML = '教官：「あなた（青）のターンからだ。<br>まずは手札の『ハウリザード』を選んで、左上のマスに置いてみたまえ。」';
+            text.innerHTML = '教官：「あなた（青）のターンからよ。<br>まずは手札の『ハウリザード』を選んで、左上のマスに置いてみて。」';
             const c0 = document.getElementById('p1-card-0'); // ハウリザード
             if (c0) c0.classList.add('highlight-tutorial');
             const cell0 = document.getElementById('cell-0'); // 左上
             if (cell0) cell0.classList.add('highlight-tutorial');
             break;
         case 2:
-            text.innerHTML = '教官：「よし、次は私の番だな。」';
+            text.innerHTML = '教官：「いいわね。…次は私の番ね。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
@@ -700,14 +700,14 @@ function runBasicTutorial(box, text) {
             }, 2000);
             break;
         case 3:
-            text.innerHTML = '教官：「下に『1』を持つカードだな。<br>キミの手札の『フォカロル(小)』(上:3) を、私のカードのすぐ下のマス（真ん中）に置いてみたまえ！<br>接している数字が相手より大きければ、裏返せるぞ。」';
+            text.innerHTML = '教官：「このカード、下の数字が『1』……弱点が見えるわね。<br>あなたの手札の『フォカロル(小)』(上:3) を、私のカードのすぐ下のマス（真ん中）に置いてみて。<br>接している数字が相手より大きければ、裏返せるわ。」';
             const c1 = document.getElementById('p1-card-1'); // フォカロル小
             if (c1) c1.classList.add('highlight-tutorial');
             const cell4 = document.getElementById('cell-4'); // 真ん中の中央
             if (cell4) cell4.classList.add('highlight-tutorial');
             break;
         case 4:
-            text.innerHTML = '教官：「見事に裏返したな！<br>最終的に自分の色のカードが多い状態になれば勝利だ。残りのカードは自由に置いて勝負してみよう！」';
+            text.innerHTML = '教官：「見事ね！<br>最終的に自分の色のカードが多い状態になれば勝利よ。あとは自分で考えて。実戦で学ぶのが一番よ。」';
             clearTutorialHighlights();
             setTimeout(() => {
                 box.classList.add('hidden');
@@ -724,14 +724,14 @@ function runSameTutorial(box, text) {
     switch (tutorialStep) {
         case 1:
             currentTurn = 'p1';
-            text.innerHTML = '教官（セイム）：「セイムの極意を教えよう。<br>まずはあなたの番だ。手札の『ハウリザード』を左上に置いてみたまえ。」';
+            text.innerHTML = '教官（セイム）：「セイムの仕組みを教えるわ。<br>まずはあなたの番よ。手札の『ハウリザード』を左上に置いてみて。」';
             const c_p1 = document.getElementById('p1-card-0'); // ハウリザード
             if (c_p1) c_p1.classList.add('highlight-tutorial');
             const cell0 = document.getElementById('cell-0'); // 左上
             if (cell0) cell0.classList.add('highlight-tutorial');
             break;
         case 2:
-            text.innerHTML = '教官（セイム）：「次に私が左下に置くぞ。」';
+            text.innerHTML = '教官（セイム）：「次は私ね。左下に置くわ。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
@@ -745,14 +745,14 @@ function runSameTutorial(box, text) {
             break;
         case 3:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（セイム）：「さあ、キミの手札に『ケダチク (上:4, 下:2)』があるな。<br>それをハウリザードとプリヌラの間（左中央）に置いてみろ！<br>上のカードとは「4」、下のカードとは「2」が一致して『セイム』が発動するはずだ！」';
+            text.innerHTML = '教官（セイム）：「あなたの手札に『ケダチク (上:4, 下:2)』があるわね。<br>それをハウリザードとプリヌラの間（左中央）に置いてみて。<br>上のカードとは「4」、下のカードとは「2」が一致して『セイム』が発動するはずよ。」';
             const c_p2 = document.getElementById('p1-card-1'); // ケダチク
             if (c_p2) c_p2.classList.add('highlight-tutorial');
             const cell3 = document.getElementById('cell-3'); // 左中央
             if (cell3) cell3.classList.add('highlight-tutorial');
             break;
         case 4:
-            text.innerHTML = '教官（セイム）：「これが『セイム』だ！数字の強さに関係なく、同じ数字なら奪い取れる強力な技だぞ。<br>残りの勝負は自由に進めたまえ。」';
+            text.innerHTML = '教官（セイム）：「これが『セイム』よ。数字の強さに関係なく、同じ数字なら奪い取れる強力な技だわ。<br>残りは自分で進めてみて。」';
             clearTutorialHighlights();
             setTimeout(() => {
                 box.classList.add('hidden');
@@ -767,7 +767,7 @@ function runSameTutorial(box, text) {
 function runPlusTutorial(box, text) {
     switch (tutorialStep) {
         case 1:
-            text.innerHTML = '教官（プラス）：「プラスのルールを教えるぞ。<br>私が2枚のカードを配置するまで待つように。」';
+            text.innerHTML = '教官（プラス）：「プラスのルールを教えるわ。<br>私が2枚カードを置くから、少し待っていて。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
@@ -786,14 +786,14 @@ function runPlusTutorial(box, text) {
             break;
         case 3:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（プラス）：「さあ、キミの手札の『ハウリザード (左:1, 右:5)』を、２枚のカードの間に置くのだ。<br>接する数字どうしを足し算してみろ。<br>左側は [7+1=8]、右側は [5+3=8] だな。この『合計値』が2箇所以上で同じなら『プラス』が発動する！」';
+            text.innerHTML = '教官（プラス）：「さあ、あなたの手札の『ハウリザード (左:1, 右:5)』を、2枚のカードの間に置いてみて。<br>接する数字を足し算するの。<br>左側は [7+1=8]、右側は [5+3=8] ……この『合計値』が2箇所以上で同じなら、『プラス』が発動するわ。」';
             const c1 = document.getElementById('p1-card-0'); // ハウリザード
             if (c1) c1.classList.add('highlight-tutorial');
             const cell1 = document.getElementById('cell-1'); // 中央上
             if (cell1) cell1.classList.add('highlight-tutorial');
             break;
         case 4:
-            text.innerHTML = '教官（プラス）：「見事だ！合計が同じなら、相手の数字に関係なく奪えるのがプラスの力だ。<br>この調子で残りのカードも置いてみせろ！」';
+            text.innerHTML = '教官（プラス）：「お見事。合計が同じなら、相手の数字がいくつでも奪えるのがプラスの力よ。<br>この調子で、残りのカードも置いてみて。」';
             clearTutorialHighlights();
             setTimeout(() => {
                 box.classList.add('hidden');
@@ -808,7 +808,7 @@ function runPlusTutorial(box, text) {
 function runComboTutorial(box, text) {
     switch (tutorialStep) {
         case 1:
-            text.innerHTML = '教官（コンボ）：「連鎖（コンボ）の真髄を見せてやろう。<br>まずは下準備として、私のカードを左中央に置くぞ。」';
+            text.innerHTML = '教官（コンボ）：「連鎖（コンボ）……これを知るかどうかで、勝負の質が変わるわ。<br>まずは下準備として、私のカードを左中央に置くわね。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
@@ -819,14 +819,14 @@ function runComboTutorial(box, text) {
             break;
         case 2:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（コンボ）：「次に、キミの手札の『フォカロル(小) (下:5)』を、その右隣（中央）に置いてみたまえ。」';
+            text.innerHTML = '教官（コンボ）：「次に、あなたの手札の『フォカロル(小) (下:5)』を、その右隣（中央）に置いてみて。」';
             const c1 = document.getElementById('p1-card-1'); // フォカロル小
             if (c1) c1.classList.add('highlight-tutorial');
             const cell4 = document.getElementById('cell-4');
             if (cell4) cell4.classList.add('highlight-tutorial');
             break;
         case 3:
-            text.innerHTML = '教官（コンボ）：「よし、私も左下にカードを置くぞ。」';
+            text.innerHTML = '教官（コンボ）：「いいわ。私も左下にカードを置くわね。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
@@ -837,14 +837,14 @@ function runComboTutorial(box, text) {
             break;
         case 4:
             currentTurn = 'p1'; // プレイヤーのターンに強制
-            text.innerHTML = '教官（コンボ）：「さあ、仕上げだ。手札の『ハウリザード (左:1, 上:1)』を、２枚のカードの間に置くのだ。<br>上側は [1+5=6]、左側は [1+5=6] だな。これで『プラス』が発動する！<br>さらに、奪ったカードが隣のカードを数字で上回れば、『連鎖（コンボ）』が次々と発生するぞ！」';
+            text.innerHTML = '教官（コンボ）：「さあ、仕上げよ。手札の『ハウリザード (左:1, 上:1)』を、2枚のカードの間に置いて。<br>上側は [1+5=6]、左側は [1+5=6]。これで『プラス』が発動するわ。<br>そして、奪ったカードが隣のカードを数字で上回れば、『連鎖（コンボ）』が次々と起きるの。」';
             const c2 = document.getElementById('p1-card-0'); // ハウリザード
             if (c2) c2.classList.add('highlight-tutorial');
             const cell7 = document.getElementById('cell-7'); // 下中央
             if (cell7) cell7.classList.add('highlight-tutorial');
             break;
         case 5:
-            text.innerHTML = '教官（コンボ）：「これが連鎖だ。弱いカードも配置次第で強力な武器になる。<br>あとは実戦で学ぶがいい！」';
+            text.innerHTML = '教官（コンボ）：「……これが連鎖よ。弱いカードでも、配置次第で局面をひっくり返せる。<br>覚えておくといいわ。」';
             clearTutorialHighlights();
             setTimeout(() => {
                 box.classList.add('hidden');
@@ -859,7 +859,7 @@ function runComboTutorial(box, text) {
 function runWallSameTutorial(box, text) {
     switch (tutorialStep) {
         case 1:
-            text.innerHTML = '教官（ウォールセイム）：「次は『ウォールセイム』の極意だ。<br>このルールでは、盤面の外側（壁）を数字の『A（10）』として扱うぞ。<br>まずは私からだ。」';
+            text.innerHTML = '教官（ウォールセイム）：「次は『ウォールセイム』よ。<br>このルールでは、盤面の端……つまり壁を数字の『A（10）』として扱うの。<br>まずは私から置くわね。」';
             setTimeout(() => {
                 box.classList.add('hidden');
                 setTimeout(() => {
@@ -873,16 +873,16 @@ function runWallSameTutorial(box, text) {
             break;
         case 2:
             currentTurn = 'p1';
-            text.innerHTML = '教官（ウォールセイム）：「さあ、キミの番だ。<br>手札の『パンデモニウム (上:A, 左:7)』を、左上の隅に置いてみろ！<br>上側と左側が『壁』に接するはずだ。」';
+            text.innerHTML = '教官（ウォールセイム）：「あなたの番よ。<br>手札の『パンデモニウム (上:A, 左:7)』を、左上の隅に置いてみて。<br>上と左が壁に接するわ。」';
             const c1 = document.getElementById('p1-card-0'); // パンデモニウム
             if (c1) c1.classList.add('highlight-tutorial');
             const cell0 = document.getElementById('cell-0'); // 左上
             if (cell0) cell0.classList.add('highlight-tutorial');
             break;
         case 3:
-            text.innerHTML = '教官（ウォールセイム）：「見ての通り、上と左が『壁』と同じ数字（A）として判定され、『セイム』が発動した！<br>さらに、隣の私のカードも巻き込んで裏返したな！」';
+            text.innerHTML = '教官（ウォールセイム）：「上手くいったわね。<br>上と左が壁＝『A』と同じ数字として判定されて、『セイム』が発動したわ。<br>隣の私のカードも巻き込まれたわね。」';
             setTimeout(() => {
-                text.innerHTML = '教官（ウォールセイム）：「壁を利用すれば、強力なカードも一網打尽にできる。<br>あとは自分で工夫して戦ってみたまえ！」';
+                text.innerHTML = '教官（ウォールセイム）：「壁を味方につければ、どんな強力なカードも崩せる。<br>あとは自分で工夫してみて。あなたなら、すぐに使いこなせるはずよ。」';
                 clearTutorialHighlights();
                 setTimeout(() => {
                     box.classList.add('hidden');
