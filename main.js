@@ -551,8 +551,8 @@ function startStoryBattle(npcId) {
         const p1Deck = [];
         const tutorialP1Cards = {
             'npc_00': ['c1', 'c8', 'c13', 'c16', 'c19'], // 基本
-            'npc_tut_same': ['c1', 'c10', 'c22', 'c3', 'c8'], // セイム用 (ハウリザード、ケダチク、グランデアーロを入れる)
-            'npc_tut_plus': ['c1', 'c6', 'c2', 'c3', 'c9'], // プラス用 (c1, c6, c9を入れる)
+            'npc_tut_same': ['c1', 'c10', 'c22', 'c14', 'c8'], // セイム用 (ハウリザード、ケダチク、グランデアーロを入れる)
+            'npc_tut_plus': ['c1', 'c4', 'c2', 'c3', 'c9'], // プラス用 (c1, c4, c9を入れる)
             'npc_tut_combo': ['c1', 'c8', 'c9', 'c2', 'c6'], // コンボ用 (ハウリザード, フォカロル小, ブラッドソウルを入れる)
             'npc_tut_same_wall': ['c93', 'c1', 'c2', 'c3', 'c9'] // ウォールセイム用 (c93 パンデモニウムを入れる)
         };
@@ -766,6 +766,8 @@ async function finalizePlacementUI(cellIndex, cellElement, result) {
 
     if (result.rules && result.rules.length > 0) {
         showSpecialRuleEffect(result.rules);
+        // 特殊ルールの演出の余韻を残し、SEの被りを防ぐために待機
+        await new Promise(resolve => setTimeout(resolve, 800));
     }
 
     await processFlippedCards(result.flipped, owner);
@@ -951,12 +953,18 @@ function showResultScreen(result) {
     document.getElementById('final-score-p1').textContent = result.p1Score;
     document.getElementById('final-score-p2').textContent = result.p2Score;
 
+    // チュートリアルNPCとの対戦は対戦履歴に記録しない
+    const isTutorialNpc = typeof currentStoryNpcId !== 'undefined' &&
+        (currentStoryNpcId === 'npc_00' || currentStoryNpcId.startsWith('npc_tut_'));
+
     if (result.winner === 'p1') {
         if (typeof playSE === 'function') playSE('win');
         titleEl.textContent = 'YOU WIN!';
         titleEl.style.color = 'var(--color-p1)';
         screenResult.classList.add('win-effect');
-        updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+        if (!isTutorialNpc) {
+            updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+        }
 
         // ストーリーモードで勝利かつ未討伐のNPCだった場合の進行処理
         if (pendingGameMode === 'story' && currentStoryNpcId) {
@@ -982,12 +990,16 @@ function showResultScreen(result) {
         titleEl.textContent = 'YOU LOSE...';
         titleEl.style.color = 'var(--color-p2)';
         screenResult.classList.add('lose-effect');
-        updateStats({ result: 'loss', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+        if (!isTutorialNpc) {
+            updateStats({ result: 'loss', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+        }
     } else {
         if (typeof playSE === 'function') playSE('draw');
         titleEl.textContent = 'DRAW';
         titleEl.style.color = 'white';
-        updateStats({ result: 'draw', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+        if (!isTutorialNpc) {
+            updateStats({ result: 'draw', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+        }
     }
 
     // FF8原作風の二段階演出：文字をバーンと出した後、2秒後にスコアやトレードをフェードイン

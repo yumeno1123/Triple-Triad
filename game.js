@@ -174,7 +174,8 @@ function showRulesIntroAnimation(config, onComplete) {
             showNext();
         }, DISPLAY_MS);
     }
-    showNext();
+    const INITIAL_DELAY = 500; // 盤面が表示されてから最初のルールが出るまでの待ち時間
+    setTimeout(showNext, INITIAL_DELAY);
 }
 
 
@@ -642,6 +643,15 @@ loadStats();
 // ==========================================
 // チュートリアル用 スクリプトイベント制御
 // ==========================================
+
+/**
+ * チュートリアル用のハイライトを一括削除する
+ */
+function clearTutorialHighlights() {
+    const highlights = document.querySelectorAll('.highlight-tutorial');
+    highlights.forEach(el => el.classList.remove('highlight-tutorial'));
+}
+
 window.advanceTutorialStep = function () {
     const box = document.getElementById('tutorial-message-box');
     const text = document.getElementById('tutorial-text');
@@ -698,6 +708,7 @@ function runBasicTutorial(box, text) {
             break;
         case 4:
             text.innerHTML = '教官：「見事に裏返したな！<br>最終的に自分の色のカードが多い状態になれば勝利だ。残りのカードは自由に置いて勝負してみよう！」';
+            clearTutorialHighlights();
             setTimeout(() => {
                 box.classList.add('hidden');
                 isTutorialMode = false; // チュートリアル終了
@@ -742,6 +753,7 @@ function runSameTutorial(box, text) {
             break;
         case 4:
             text.innerHTML = '教官（セイム）：「これが『セイム』だ！数字の強さに関係なく、同じ数字なら奪い取れる強力な技だぞ。<br>残りの勝負は自由に進めたまえ。」';
+            clearTutorialHighlights();
             setTimeout(() => {
                 box.classList.add('hidden');
                 isTutorialMode = false;
@@ -782,6 +794,7 @@ function runPlusTutorial(box, text) {
             break;
         case 4:
             text.innerHTML = '教官（プラス）：「見事だ！合計が同じなら、相手の数字に関係なく奪えるのがプラスの力だ。<br>この調子で残りのカードも置いてみせろ！」';
+            clearTutorialHighlights();
             setTimeout(() => {
                 box.classList.add('hidden');
                 isTutorialMode = false;
@@ -832,6 +845,7 @@ function runComboTutorial(box, text) {
             break;
         case 5:
             text.innerHTML = '教官（コンボ）：「これが連鎖だ。弱いカードも配置次第で強力な武器になる。<br>あとは実戦で学ぶがいい！」';
+            clearTutorialHighlights();
             setTimeout(() => {
                 box.classList.add('hidden');
                 isTutorialMode = false;
@@ -869,6 +883,7 @@ function runWallSameTutorial(box, text) {
             text.innerHTML = '教官（ウォールセイム）：「見ての通り、上と左が『壁』と同じ数字（A）として判定され、『セイム』が発動した！<br>さらに、隣の私のカードも巻き込んで裏返したな！」';
             setTimeout(() => {
                 text.innerHTML = '教官（ウォールセイム）：「壁を利用すれば、強力なカードも一網打尽にできる。<br>あとは自分で工夫して戦ってみたまえ！」';
+                clearTutorialHighlights();
                 setTimeout(() => {
                     box.classList.add('hidden');
                     isTutorialMode = false;

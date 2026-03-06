@@ -26,7 +26,7 @@ const NPC_DATA = [
         description: 'カードの置き方と裏返しの基本ルールを教えてくれる。まずはここから始めよう！',
         deckType: 'fixed',
         fixedDeck: ['c2', 'c3', 'c4', 'c5', 'c7'],
-        rules: [],
+        rules: ['open'],
         unlockCondition: null
     },
     {
@@ -38,7 +38,7 @@ const NPC_DATA = [
         // c5(プリヌラ:上2)を左下に配置させる
         // プレイヤーのケダチク(下2, 上4)とハウリザード(下4)で、2点一致 → セイム成立
         fixedDeck: ['c5', 'c8', 'c12', 'c11', 'c7'],
-        rules: ['same'],
+        rules: ['same', 'open'],
         unlockCondition: 'npc_00'
     },
     {
@@ -48,7 +48,7 @@ const NPC_DATA = [
         description: '隣接する数字の「足し算の合計」が2箇所以上同じ場合に発動する「プラス」ルールを教えます。',
         deckType: 'fixed',
         fixedDeck: ['c21', 'c23', 'c22', 'c24', 'c25'],
-        rules: ['plus'],
+        rules: ['plus', 'open'],
         unlockCondition: 'npc_tut_same'
     },
     {
@@ -58,7 +58,7 @@ const NPC_DATA = [
         description: 'セイムやプラスから派生して別のカードを奪う「連鎖（コンボ）」ルールを実地で教えます。',
         deckType: 'fixed',
         fixedDeck: ['c2', 'c18', 'c14', 'c11', 'c8'],
-        rules: ['same', 'plus'],
+        rules: ['same', 'plus', 'open'],
         unlockCondition: 'npc_tut_plus'
     },
     {
@@ -68,7 +68,7 @@ const NPC_DATA = [
         description: '盤面の「壁」を、数字のA（10）として扱う「ウォールセイム」ルールを学びます。',
         deckType: 'fixed',
         fixedDeck: ['c53', 'c10', 'c12', 'c13', 'c16'],
-        rules: ['same-wall'],
+        rules: ['same-wall', 'open'],
         unlockCondition: 'npc_tut_combo'
     },
 
@@ -80,7 +80,7 @@ const NPC_DATA = [
         description: 'カードゲームの初心者。ルールを覚えるのに最適。',
         deckType: 'level',
         baseLevel: 1,
-        rules: [],
+        rules: ['open'],
         unlockCondition: 'npc_tut_combo'
     },
     {
@@ -132,7 +132,7 @@ const NPC_DATA = [
         description: 'パブ2F。手札がランダムに選ばれる「ランダム」ルールの使い手。',
         deckType: 'level',
         baseLevel: 4,
-        rules: ['random'],
+        rules: ['random', 'open'],
         unlockCondition: 'npc_05'
     },
     {
@@ -142,7 +142,7 @@ const NPC_DATA = [
         description: '世界を旅するカードの女王。盤面の属性による補正「エレメンタル」ルールを好む。',
         deckType: 'level',
         baseLevel: 6,
-        rules: ['random', 'elemental'],
+        rules: ['random', 'elemental', 'open'],
         unlockCondition: 'npc_dollet_01'
     },
 
@@ -154,7 +154,7 @@ const NPC_DATA = [
         description: '名もなき兵士。基本的なセイムルールで戦ってくる。',
         deckType: 'level',
         baseLevel: 3,
-        rules: ['same'],
+        rules: ['same', 'open'],
         unlockCondition: 'npc_dollet_02'
     },
     {
@@ -164,7 +164,7 @@ const NPC_DATA = [
         description: 'デリングシティの権力者。強力なレベル10カードを繰り出してくる。',
         deckType: 'level',
         baseLevel: 7,
-        rules: ['same'],
+        rules: ['same', 'open'],
         unlockCondition: 'npc_gal_01'
     },
 
@@ -176,7 +176,7 @@ const NPC_DATA = [
         description: '海上の街の代表。引き分けで再戦となる「サドンデス」ルールを貫く。',
         deckType: 'level',
         baseLevel: 4,
-        rules: ['sudden-death', 'elemental'],
+        rules: ['sudden-death', 'elemental', 'open'],
         unlockCondition: 'npc_gal_02'
     },
     {
@@ -186,7 +186,7 @@ const NPC_DATA = [
         description: 'ガルバディアから離れた元副学園長。かつて見たことのあるレアカードを持っている。',
         deckType: 'level',
         baseLevel: 8,
-        rules: ['sudden-death', 'plus'],
+        rules: ['sudden-death', 'plus', 'open'],
         unlockCondition: 'npc_fh_01'
     },
 
@@ -198,7 +198,7 @@ const NPC_DATA = [
         description: 'ガーモイル像付近にいる生徒。プラスとランダムが混ざった非常に強力なルールの使い手。',
         deckType: 'level',
         baseLevel: 5,
-        rules: ['random', 'plus'],
+        rules: ['random', 'plus', 'open'],
         unlockCondition: 'npc_fh_02'
     },
 
@@ -210,7 +210,7 @@ const NPC_DATA = [
         description: '高度な文明を持つ都市の住人。壁を数字のA(10)として扱う「ウォールセイム」を使う。',
         deckType: 'level',
         baseLevel: 6,
-        rules: ['elemental', 'same-wall'],
+        rules: ['elemental', 'same-wall', 'open'],
         unlockCondition: 'npc_tra_01'
     },
     {
@@ -220,7 +220,7 @@ const NPC_DATA = [
         description: '科学者。エレメンタルとウォールセイムを組み合わせた特殊な環境で戦う。',
         deckType: 'level',
         baseLevel: 9,
-        rules: ['elemental', 'same-wall', 'same'],
+        rules: ['elemental', 'same-wall', 'same', 'open'],
         unlockCondition: 'npc_est_01'
     },
 
