@@ -104,6 +104,11 @@ function initGame(mode, rules = null, playerHand = null, cardLevel = 5, player2H
     currentTurn = finalTurn;
     setupUI();
 
+    // UIの名前表示を最新の状態に更新
+    if (typeof updatePlayerNameUI === 'function') {
+        updatePlayerNameUI();
+    }
+
     if (isTutorialMode) {
         const startText = 'TUTORIAL START!';
         const color = 'var(--color-p1)';
@@ -120,7 +125,9 @@ function initGame(mode, rules = null, playerHand = null, cardLevel = 5, player2H
         playTurnRoulette(finalTurn, () => {
             // ルール紹介アニメーションを挟んでからゲーム開始テキストを表示
             showRulesIntroAnimation(gameConfig, () => {
-                const startText = currentTurn === 'p1' ? 'PLAYER 1 START!' : (gameMode === 'pvc' ? 'CPU START!' : 'PLAYER 2 START!');
+                const playerName = localStorage.getItem('playerName') || 'スコール';
+                const opponentName = (typeof getOpponentName === 'function') ? getOpponentName() : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
+                const startText = currentTurn === 'p1' ? `${playerName.toUpperCase()} START!` : `${opponentName.toUpperCase()} START!`;
                 const color = currentTurn === 'p1' ? 'var(--color-p1)' : 'var(--color-p2)';
                 showGameStartEffect(startText, color);
 
@@ -208,7 +215,9 @@ function playTurnRoulette(finalTurn, onComplete) {
         if (flashes >= maxFlashes) {
             // 最終結果で固定
             currentShow = finalTurn;
-            const text = currentShow === 'p1' ? 'PLAYER 1 FIRST' : (gameMode === 'pvc' ? 'CPU FIRST' : 'PLAYER 2 FIRST');
+            const playerName = localStorage.getItem('playerName') || 'スコール';
+            const opponentName = (typeof getOpponentName === 'function') ? getOpponentName() : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
+            const text = currentShow === 'p1' ? `${playerName.toUpperCase()} FIRST` : `${opponentName.toUpperCase()} FIRST`;
             const color = currentShow === 'p1' ? 'var(--color-p1)' : 'var(--color-p2)';
 
             indicator.textContent = text;
@@ -229,7 +238,9 @@ function playTurnRoulette(finalTurn, onComplete) {
                     indicator.style.transform = '';
                     indicator.style.textShadow = '';
                     indicator.style.zIndex = '';
-                    indicator.textContent = `TURN: ${currentTurn === 'p1' ? 'PLAYER 1' : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2')}`;
+                    const playerName = localStorage.getItem('playerName') || 'スコール';
+                    const opponentName = (typeof getOpponentName === 'function') ? getOpponentName() : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
+                    indicator.textContent = `TURN: ${currentTurn === 'p1' ? playerName.toUpperCase() : opponentName.toUpperCase()}`;
 
                     // ブロック解除
                     if (gameArea) gameArea.style.pointerEvents = '';
@@ -240,7 +251,9 @@ function playTurnRoulette(finalTurn, onComplete) {
         }
 
         // フラッシュ中のテキスト切り替え
-        const text = currentShow === 'p1' ? 'PLAYER 1' : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
+        const playerName = localStorage.getItem('playerName') || 'スコール';
+        const opponentName = (typeof getOpponentName === 'function') ? getOpponentName() : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
+        const text = currentShow === 'p1' ? playerName.toUpperCase() : opponentName.toUpperCase();
         const color = currentShow === 'p1' ? 'var(--color-p1)' : 'var(--color-p2)';
 
         indicator.textContent = text;
@@ -270,7 +283,7 @@ function showGameStartEffect(text, color) {
 
 function placeCardOnBoard(boardIndex, cardInfo, owner) {
     if (boardState[boardIndex] !== null) {
-        return { flipped: [], rules: [] };
+        return { flipped: [], rules: [], flipDetails: {} };
     }
 
     let mod = 0;
@@ -292,15 +305,26 @@ function placeCardOnBoard(boardIndex, cardInfo, owner) {
 
     activeSpecialRules = [];
     let allFlipped = new Set();
+    let flipDetails = []; // チュートリアル用の詳細記録（配列ベース）
 
     const specialResult = checkSpecialRules(boardIndex, owner);
     const specialFlipped = specialResult.flipped;
     const comboStarters = specialResult.comboStarters;
 
+    if (specialResult.details && specialResult.details.length > 0) {
+        flipDetails.push(...specialResult.details);
+    }
+
     specialFlipped.forEach(idx => allFlipped.add(idx));
 
-    const normalFlipped = checkNormalBattles(boardIndex, owner);
-    normalFlipped.forEach(idx => allFlipped.add(idx));
+    const normalResult = checkNormalBattles(boardIndex, owner);
+    const normalFlipped = normalResult.flipped;
+    normalFlipped.forEach(idx => {
+        allFlipped.add(idx);
+    });
+    if (normalResult.details && normalResult.details.length > 0) {
+        flipDetails.push(...normalResult.details);
+    }
 
     if (comboStarters.length > 0) {
         let comboQueue = [...comboStarters];
@@ -308,7 +332,8 @@ function placeCardOnBoard(boardIndex, cardInfo, owner) {
 
         while (comboQueue.length > 0) {
             const originIndex = comboQueue.shift();
-            const newlyFlipped = checkNormalBattles(originIndex, owner);
+            const comboResult = checkNormalBattles(originIndex, owner);
+            const newlyFlipped = comboResult.flipped;
 
             newlyFlipped.forEach(idx => {
                 if (!allFlipped.has(idx)) {
@@ -317,6 +342,10 @@ function placeCardOnBoard(boardIndex, cardInfo, owner) {
                     hasCombo = true;
                 }
             });
+            if (comboResult.details && comboResult.details.length > 0) {
+                const comboDetails = comboResult.details.map(d => ({ ...d, isCombo: true }));
+                flipDetails.push(...comboDetails);
+            }
         }
 
         if (hasCombo) {
@@ -326,7 +355,8 @@ function placeCardOnBoard(boardIndex, cardInfo, owner) {
 
     return {
         flipped: Array.from(allFlipped),
-        rules: activeSpecialRules
+        rules: activeSpecialRules,
+        flipDetails: flipDetails
     };
 }
 
@@ -365,16 +395,17 @@ function simulatePlacement(boardIndex, cardInfo, owner) {
 function checkSpecialRules(index, owner) {
     const flipped = [];
     const comboStarters = [];
+    const details = []; // チュートリアル用の記録（配列）
     const originCard = boardState[index];
     const x = index % 3;
     const y = Math.floor(index / 3);
 
     const neighbors = [];
     const directions = [
-        { dx: 0, dy: -1, myStat: 0, enStat: 2 },
-        { dx: 1, dy: 0, myStat: 1, enStat: 3 },
-        { dx: 0, dy: 1, myStat: 2, enStat: 0 },
-        { dx: -1, dy: 0, myStat: 3, enStat: 1 }
+        { dx: 0, dy: -1, myStat: 0, enStat: 2, dir: 'top' },
+        { dx: 1, dy: 0, myStat: 1, enStat: 3, dir: 'right' },
+        { dx: 0, dy: 1, myStat: 2, enStat: 0, dir: 'bottom' },
+        { dx: -1, dy: 0, myStat: 3, enStat: 1, dir: 'left' }
     ];
 
     for (const dir of directions) {
@@ -389,7 +420,10 @@ function checkSpecialRules(index, owner) {
                     card: tCard,
                     myVal: originCard.stats[dir.myStat],
                     enVal: tCard.stats[dir.enStat],
-                    isWall: false
+                    isWall: false,
+                    dir: dir.dir,
+                    myStatIdx: dir.myStat,
+                    enStatIdx: dir.enStat
                 });
             }
         } else if (gameConfig.sameWall) {
@@ -398,7 +432,9 @@ function checkSpecialRules(index, owner) {
                 card: null,
                 myVal: originCard.stats[dir.myStat],
                 enVal: 10,
-                isWall: true
+                isWall: true,
+                dir: dir.dir,
+                myStatIdx: dir.myStat
             });
         }
     }
@@ -412,24 +448,31 @@ function checkSpecialRules(index, owner) {
         let triggerSame = false;
         let triggerWallSame = false;
 
-        // 純粋なセイム（カード同士が2枚以上）
-        if (gameConfig.same && cardMatches.length >= 2) {
-            triggerSame = true;
-        }
-        // ウォールセイム（壁を含んで2箇所以上マッチ、かつカードが1枚以上ある）
-        if (gameConfig.sameWall && hasWall && sameMatches.length >= 2 && cardMatches.length >= 1) {
-            triggerWallSame = true;
-        }
+        if (gameConfig.same && cardMatches.length >= 2) triggerSame = true;
+        if (gameConfig.sameWall && hasWall && sameMatches.length >= 2 && cardMatches.length >= 1) triggerWallSame = true;
 
         if (triggerSame || triggerWallSame) {
-            activeSpecialRules.push(triggerWallSame ? 'WALL SAME' : 'SAME');
-            cardMatches.forEach(match => {
-                if (!comboStarters.includes(match.index)) {
-                    comboStarters.push(match.index);
+            const ruleName = triggerWallSame ? 'WALL SAME' : 'SAME';
+            activeSpecialRules.push(ruleName);
+            sameMatches.forEach(match => {
+                if (match.index !== null) {
+                    if (!comboStarters.includes(match.index)) comboStarters.push(match.index);
+                    if (match.card.owner !== owner) {
+                        match.card.owner = owner;
+                        flipped.push(match.index);
+                    }
                 }
-                if (match.card.owner !== owner) {
-                    match.card.owner = owner;
-                    flipped.push(match.index);
+                // SAMEに関わった壁を含むすべての方向を記録
+                if (match.index !== null || match.isWall) {
+                    details.push({
+                        rule: ruleName,
+                        reason: 'same',
+                        myStat: match.myStatIdx,
+                        enStat: match.enStatIdx,
+                        placedIndex: index,
+                        flippedIndex: match.index, // 壁の場合は null
+                        isWall: match.isWall
+                    });
                 }
             });
         }
@@ -452,23 +495,31 @@ function checkSpecialRules(index, owner) {
                     isPlusTriggered = true;
                 }
                 sumMap[sum].forEach(match => {
-                    if (!comboStarters.includes(match.index)) {
-                        comboStarters.push(match.index);
-                    }
+                    if (!comboStarters.includes(match.index)) comboStarters.push(match.index);
                     if (match.card.owner !== owner && !flipped.includes(match.index)) {
                         match.card.owner = owner;
                         flipped.push(match.index);
                     }
+                    details.push({
+                        rule: 'PLUS',
+                        reason: 'plus',
+                        myStat: match.myStatIdx,
+                        enStat: match.enStatIdx,
+                        placedIndex: index,
+                        flippedIndex: match.index,
+                        isWall: false
+                    });
                 });
             }
         }
     }
 
-    return { flipped, comboStarters };
+    return { flipped, comboStarters, details };
 }
 
 function checkNormalBattles(index, owner) {
     const flipped = [];
+    const details = []; // チュートリアル用の記録
     const originCard = boardState[index];
     const x = index % 3;
     const y = Math.floor(index / 3);
@@ -494,12 +545,20 @@ function checkNormalBattles(index, owner) {
                 if (myVal > enVal) {
                     tCard.owner = owner;
                     flipped.push(tIndex);
+                    // 隣接するカードの数値を比較した結果
+                    details.push({
+                        reason: 'normal',
+                        myStat: dir.myStat,
+                        enStat: dir.enStat,
+                        placedIndex: index,
+                        flippedIndex: tIndex
+                    });
                 }
             }
         }
     }
 
-    return flipped;
+    return { flipped, details };
 }
 
 function checkGameOver(p1HandCount = 0, p2HandCount = 0) {
@@ -633,10 +692,12 @@ function updateStats(details) {
 
     // 履歴の記録
     const dateStr = new Date().toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const playerName = localStorage.getItem('playerName') || 'スコール';
     const opponentName = mode === 'pvc' ? `CPU LV${opponentLevel}` : '対人戦 (PvP)';
 
     playerStats.recentMatches.unshift({
         date: dateStr,
+        playerName: playerName,
         opponent: opponentName,
         myScore: myScore,
         enemyScore: enemyScore,

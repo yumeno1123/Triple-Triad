@@ -163,7 +163,9 @@ function showDeckEditScreen(matchType, player = 'p1') {
     currentSelectingPlayer = player;
     const titleEl = document.getElementById('deck-edit-title');
     if (titleEl) {
-        titleEl.textContent = `DECK EDIT (PLAYER ${player === 'p1' ? '1' : '2'})`;
+        const playerName = localStorage.getItem('playerName') || 'スコール';
+        const opponentName = getOpponentName();
+        titleEl.textContent = `DECK EDIT (${player === 'p1' ? playerName : opponentName})`;
     }
 
     [screenTitle, screenStory, screenFreeBattle].forEach(s => {
@@ -779,6 +781,11 @@ async function finalizePlacementUI(cellIndex, cellElement, result) {
         await new Promise(resolve => setTimeout(resolve, 800));
     }
 
+    // チュートリアル用の演出（一時停止と強調）
+    if (typeof isTutorialMode !== 'undefined' && isTutorialMode && result.flipped.length > 0) {
+        await showTutorialFlipExplanation(cellIndex, result);
+    }
+
     await processFlippedCards(result.flipped, owner);
     checkAndEndTurn();
 }
@@ -806,12 +813,100 @@ function highlightAvailableCells() {
     });
 }
 
+/**
+ * チュートリアル用の演出：カードを裏返す前に一時停止し、要因となった数字を強調表示する
+ */
+async function showTutorialFlipExplanation(placedIndex, result) {
+    const tutorialBox = document.getElementById('tutorial-message-box');
+    const tutorialText = document.getElementById('tutorial-text');
+    if (!tutorialBox || !tutorialText) return;
+
+    const originalContent = tutorialText.innerHTML;
+    let explanation = "教官：「いいわね！<br>";
+
+    // 配列化された詳細データを元にメッセージを作成
+    const details = result.flipDetails || [];
+    if (details.length > 0) {
+        // 代表的な理由を1つ選ぶ（特殊ルール優先）
+        const hasSame = details.some(d => d.reason === 'same');
+        const hasPlus = details.some(d => d.reason === 'plus');
+
+        if (hasSame) {
+            explanation += "同じ数字が2箇所以上で一致したわ。『セイム』発動よ！」";
+        } else if (hasPlus) {
+            explanation += "数字の合計が同じ箇所が2つ以上あるわ。『プラス』発動よ！」";
+        } else {
+            explanation += "接している数字が相手より大きいから、裏返せるわ。」";
+        }
+    }
+
+    tutorialText.innerHTML = explanation + "<br><small>(クリックまたはタップで続けます)</small>";
+    tutorialBox.classList.remove('hidden');
+
+    // ハイライト処理
+    const highlights = [];
+    for (const detail of details) {
+        // コンボの場合はコンボ元の数字もハイライトする等の拡張が可能ですが、基本は配置カードと対象カード
+        highlights.push(highlightCardNumber(detail.placedIndex, detail.myStat));
+        if (detail.flippedIndex !== null) {
+            highlights.push(highlightCardNumber(detail.flippedIndex, detail.enStat));
+        }
+    }
+
+    await new Promise(resolve => {
+        const resume = () => {
+            window.removeEventListener('click', resume);
+            window.removeEventListener('touchstart', resume);
+            resolve();
+        };
+        window.addEventListener('click', resume);
+        window.addEventListener('touchstart', resume);
+    });
+
+    highlights.forEach(h => { if (h) h.remove(); });
+    tutorialText.innerHTML = originalContent;
+}
+
+/**
+ * 特定のカードの特定の方向の数字を赤丸でハイライトする
+ * @param {number} boardIndex - 盤面のインデックス
+ * @param {number} statIndex - 統計のインデックス (0:上, 1:右, 2:下, 3:左)
+ */
+function highlightCardNumber(boardIndex, statIndex) {
+    const cell = document.getElementById(`cell-${boardIndex}`);
+    if (!cell) return null;
+
+    // 対象のカード（表・裏問わず）を取得
+    const cardContent = cell.querySelector('.card');
+    if (!cardContent) return null;
+
+    const statClasses = ['stat-top', 'stat-right', 'stat-bottom', 'stat-left'];
+    // 表側または裏側に存在する可能性のある数字要素を探す
+    const statEl = cardContent.querySelector(`.${statClasses[statIndex]}`);
+    if (!statEl) return null;
+
+    const highlight = document.createElement('div');
+    highlight.className = 'highlight-tutorial-number';
+
+    // 数字要素内に相対配置
+    highlight.style.position = 'absolute';
+    highlight.style.left = '50%';
+    highlight.style.top = '50%';
+    // 微調整: CSSのtransformで数字の真ん中に重なるよう調整する
+    highlight.style.transform = 'translate(-50%, -50%)';
+
+    statEl.appendChild(highlight);
+    return highlight;
+}
+
 function updateTurnDisplay() {
     if (currentTurn === 'p1') {
-        turnIndicator.textContent = "TURN: PLAYER 1";
+        const playerName = localStorage.getItem('playerName') || 'スコール';
+        turnIndicator.textContent = `TURN: ${playerName.toUpperCase()}`;
         turnIndicator.className = "turn-indicator turn-p1";
     } else {
-        turnIndicator.textContent = gameMode === 'pvc' ? "TURN: CPU" : "TURN: PLAYER 2";
+        const opponentName = getOpponentName();
+        turnIndicator.textContent = `TURN: ${opponentName.toUpperCase()}`;
         turnIndicator.className = "turn-indicator turn-p2";
     }
 }
@@ -1326,6 +1421,57 @@ function loadRuleSettings() {
             console.error('Failed to parse rule settings', e);
         }
     }
+
+    // プレイヤー名の読み込み
+    const savedName = localStorage.getItem('playerName');
+    const nameInput = document.getElementById('player-name-input');
+    if (nameInput) {
+        nameInput.value = savedName || 'スコール';
+    }
+    updatePlayerNameUI();
+}
+
+/**
+ * プレイヤー名をUI（ヘッダー等）に反映する
+ */
+function updatePlayerNameUI() {
+    const playerName = localStorage.getItem('playerName') || 'スコール';
+
+    // ゲーム画面のヘッダー
+    const p1NameEl = document.querySelector('#screen-game .player1-text .name');
+    if (p1NameEl) {
+        p1NameEl.textContent = `${playerName} (Blue)`;
+    }
+
+    const p2NameEl = document.querySelector('#screen-game .player2-text .name');
+    if (p2NameEl) {
+        const opponentName = getOpponentName();
+        p2NameEl.textContent = `${opponentName} (Red)`;
+    }
+
+    // ターン表示の更新などで使われる「PLAYER 1」のテキストは
+    // game.js 側で動的に構築されることが多いため、そこでも playerName を参照するようにします。
+}
+
+/**
+ * 現在の対戦相手名を取得する
+ */
+function getOpponentName() {
+    const mode = (typeof pendingGameMode !== 'undefined' && pendingGameMode) ? pendingGameMode : (typeof gameMode !== 'undefined' && gameMode ? gameMode : '');
+    const npcId = (typeof currentStoryNpcId !== 'undefined' && currentStoryNpcId) ? currentStoryNpcId : null;
+    if (mode === 'story' && npcId) {
+        if (typeof NPC_DATA !== 'undefined') {
+            const npc = NPC_DATA.find(n => n.id === npcId);
+            if (npc) return npc.name;
+        }
+        return 'NPC';
+    } else if (mode === 'pvc') {
+        const npcStrengthInput = document.getElementById('npc-strength-level-input');
+        const npcStrength = npcStrengthInput ? npcStrengthInput.value : '3';
+        return `CPU LV${npcStrength}`;
+    } else {
+        return 'PLAYER 2';
+    }
 }
 
 // Attach listeners
@@ -1342,6 +1488,16 @@ document.querySelectorAll('input[name="match-mode"]').forEach(radio => {
 });
 const npcLevelInput = document.getElementById('npc-level-input');
 if (npcLevelInput) npcLevelInput.addEventListener('change', saveRuleSettings);
+
+// プレイヤー名入力のリスナー
+const playerNameInput = document.getElementById('player-name-input');
+if (playerNameInput) {
+    playerNameInput.addEventListener('input', (e) => {
+        const newName = e.target.value.trim() || 'スコール';
+        localStorage.setItem('playerName', newName);
+        updatePlayerNameUI();
+    });
+}
 
 // Load at startup
 loadRuleSettings();
