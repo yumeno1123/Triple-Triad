@@ -1446,6 +1446,55 @@ body {
     }
 }
 
+@media (max-height: 700px) {
+    :root {
+        --card-width: 70px;
+        --card-height: 98px;
+    }
+
+    .board {
+        margin: 10px auto;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .hand-area {
+        padding: 2px;
+    }
+
+    .tutorial-message-box {
+        top: 2px;
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-height: 600px) {
+    :root {
+        --card-width: 60px;
+        --card-height: 84px;
+    }
+
+    .game-area {
+        padding: 5px;
+    }
+
+    .board {
+        margin: 5px auto;
+        gap: 5px;
+        padding: 5px;
+    }
+
+    .game-header {
+        padding: 8px 10px;
+    }
+
+    .turn-indicator {
+        padding: 3px 10px;
+        font-size: 0.7rem;
+    }
+}
+
 /* --- Detailed Stats UI --- */
 .detailed-stats-container {
     width: 90%;

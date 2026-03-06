@@ -29,13 +29,14 @@ let gameConfig = {
     matchType: 'free'
 };
 
-function initGame(mode, rules = null, playerHand = null, npcLevel = 5, player2Hand = null) {
+function initGame(mode, rules = null, playerHand = null, cardLevel = 5, player2Hand = null, npcStrength = 3) {
     gameMode = mode;
     if (rules) {
         gameConfig = {
             ...rules,
             tradeRule: rules.tradeRule || 'one',
-            matchType: rules.matchType || 'free'
+            matchType: rules.matchType || 'free',
+            npcStrength: npcStrength // AIの強さを記録しておく
         };
     }
 
@@ -90,7 +91,7 @@ function initGame(mode, rules = null, playerHand = null, npcLevel = 5, player2Ha
 
         // NPCの手札生成: CPU戦なら指定レベルに基づき、PvPなら指定されたP2の手札（なければ完全ランダム）
         if (gameMode === 'pvc') {
-            p2Hand = drawNPCCards(npcLevel);
+            p2Hand = drawNPCCards(cardLevel);
         } else {
             p2Hand = player2Hand ? [...player2Hand] : drawRandomCards(5);
         }
@@ -554,6 +555,20 @@ function addCardToInventory(cardId) {
     }
     playerInventory[cardId]++;
     saveInventory();
+}
+
+/**
+ * 指定したカードを所持品から1枚削除する
+ * @param {string} cardId - 削除するカードのID
+ */
+function removeCardFromInventory(cardId) {
+    if (playerInventory[cardId] && playerInventory[cardId] > 0) {
+        playerInventory[cardId]--;
+        if (playerInventory[cardId] === 0) {
+            delete playerInventory[cardId];
+        }
+        saveInventory();
+    }
 }
 
 

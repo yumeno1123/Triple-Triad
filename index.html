@@ -162,14 +162,14 @@
                 <!-- NPCレベル設定（CPU戦のみ有効） -->
                 <div id="npc-level-settings" class="npc-level-settings">
                     <div class="npc-level-header">
-                        <h3>NPCレベル: <span id="npc-level-value">5</span></h3>
+                        <h3>NPC強さレベル: <span id="npc-level-value">3</span></h3>
                     </div>
                     <div class="npc-level-slider">
-                        <span>LV1</span>
-                        <input type="range" id="npc-level-input" min="1" max="10" value="5" step="1">
-                        <span>LV10</span>
+                        <span>LV1<br><small>(弱い)</small></span>
+                        <input type="range" id="npc-strength-level-input" min="1" max="5" value="3" step="1">
+                        <span>LV5<br><small>(最強)</small></span>
                     </div>
-                    <p class="npc-level-desc">NPCは自レベル ±1 のカードを使用します</p>
+                    <p class="npc-level-desc">※AIの強さに応じて、使用するカードの強さも自動的に変わります。</p>
                 </div>
 
                 <!-- ルール設定パネル -->
@@ -403,7 +403,7 @@
 
         <!-- バージョン情報 -->
         <footer class="game-footer">
-            <div id="version-display" class="version-display">v1.4.6</div>
+            <div id="version-display" class="version-display">v1.4.7</div>
         </footer>
     </div>
 

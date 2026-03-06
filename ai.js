@@ -22,20 +22,90 @@ function playCPUTurn() {
     }
 
     // --- 思考ルーチン分岐 ---
-    const npcLevelInput = document.getElementById('npc-level-input');
-    const npcLevel = npcLevelInput ? parseInt(npcLevelInput.value) || 5 : 5;
+    const npcLevelInput = document.getElementById('npc-strength-level-input');
+    // 強さスライダーがあればその値、なければgameConfigに保存した値、それでもなければ3（中級）とする
+    let npcStrength = npcLevelInput ? parseInt(npcLevelInput.value) : null;
+    if (!npcStrength) {
+        npcStrength = (typeof gameConfig !== 'undefined' && gameConfig.npcStrength) ? gameConfig.npcStrength : 3;
+    }
 
     let bestMove = null;
 
-    if (npcLevel >= 1 && npcLevel <= 4) {
-        bestMove = getMoveTypeA(emptyCells, availableCards);
-    } else if (npcLevel >= 5 && npcLevel <= 7) {
-        bestMove = getMoveTypeB(emptyCells, availableCards);
+    // NPCの強さ(1〜5)に応じて探索深さを決定
+    // Lv1: 探索なし(ランダム)
+    // Lv2: Depth 1 (自分の番のみ)
+    // Lv3: Depth 2 (次の相手の番まで)
+    // Lv4: Depth 3
+    // Lv5: Depth 4 (限界まで)
+    let depth = 0;
+    if (npcStrength === 1) depth = 0;
+    else if (npcStrength === 2) depth = 1;
+    else if (npcStrength === 3) depth = 2;
+    else if (npcStrength === 4) depth = 3;
+    else if (npcStrength === 5) depth = 4;
+
+    if (depth === 0) {
+        // Lv1: 完全ランダム
+        bestMove = {
+            cellIndex: emptyCells[Math.floor(Math.random() * emptyCells.length)],
+            cardElement: availableCards[Math.floor(Math.random() * availableCards.length)]
+        };
     } else {
-        bestMove = getMoveTypeC(emptyCells, availableCards);
+        // Lv2〜5: ミニマックス探索
+        const p1HandDiv = document.getElementById('hand-player1');
+        const p1AvailableCards = Array.from(p1HandDiv.querySelectorAll('.card:not(.played)'));
+
+        // ElementからCardデータを取り出しておく
+        const p2CardsData = availableCards.map(el => ({ element: el, info: CARD_DATA.find(c => c.id === el.dataset.id) }));
+        const p1CardsData = p1AvailableCards.map(el => ({ element: el, info: CARD_DATA.find(c => c.id === el.dataset.id) }));
+
+        // 探索開始
+        let bestValue = -Infinity;
+        let candidates = [];
+
+        // alpha-beta 用
+        let alpha = -Infinity;
+        let beta = Infinity;
+
+        for (const cellIndex of emptyCells) {
+            for (const card of p2CardsData) {
+                // 仮置き
+                const originalBoardState = boardState.map(c => c ? { ...c, stats: [...c.stats], owner: c.owner, id: c.id } : null);
+                const originalActiveSpecialRules = [...activeSpecialRules];
+
+                const result = placeCardOnBoard(cellIndex, card.info, 'p2');
+
+                // 次の手番は p1
+                const remainingP2Cards = p2CardsData.filter(c => c.info.id !== card.info.id);
+                // p1の手番の評価は p2 (AI) にとって最小化したいので minMax を呼ぶ
+                const value = minimax(depth - 1, false, alpha, beta, remainingP2Cards, p1CardsData, emptyCells.filter(idx => idx !== cellIndex));
+
+                // 盤面を戻す
+                for (let i = 0; i < 9; i++) {
+                    boardState[i] = originalBoardState[i];
+                }
+                activeSpecialRules.length = 0;
+                originalActiveSpecialRules.forEach(r => activeSpecialRules.push(r));
+
+                if (value > bestValue) {
+                    bestValue = value;
+                    candidates = [{ cellIndex: cellIndex, cardElement: card.element }];
+                } else if (value === bestValue) {
+                    candidates.push({ cellIndex: cellIndex, cardElement: card.element });
+                }
+
+                alpha = Math.max(alpha, bestValue);
+                // 最初の層なので prune はしない (一番良い手を全て集めるため)
+            }
+        }
+
+        if (candidates.length > 0) {
+            // 同スコアならランダムに選ぶ
+            bestMove = candidates[Math.floor(Math.random() * candidates.length)];
+        }
     }
 
-    // フェールセーフ (万が一bestMoveが見つからなかった場合はランダム)
+    // フェールセーフ
     if (!bestMove) {
         bestMove = {
             cellIndex: emptyCells[Math.floor(Math.random() * emptyCells.length)],
@@ -47,160 +117,107 @@ function playCPUTurn() {
 
     // 擬似的な思考時間（数秒待つ）を演出してから配置する
     setTimeout(() => {
-        // カードを選択状態にする（演出）
         cardElement.classList.add('selected');
-
         setTimeout(() => {
-            // 対象マスを取得
             const cellElement = document.getElementById(`cell-${targetCellIndex}`);
-
-            // 実際に配置する処理
             executeCPUPlacement(cardElement, cellElement, targetCellIndex);
-        }, 500); // 0.5秒後に配置
-    }, 500); // 0.5秒後にカード選択
+        }, 500);
+    }, 500);
 }
 
 // ----------------------------------------------------
-// AI 思考アルゴリズム
+// AI 思考アルゴリズム (Minimax / Alpha-Beta Pruning)
 // ----------------------------------------------------
 
 /**
- * Type A: 猪突猛進型 (Lv 1-4)
- * - 返せる枚数が一番多い場所とカードをただ選ぶ
+ * 盤面状態からAI (p2) にとっての評価値を計算する
  */
-function getMoveTypeA(emptyCells, availableCards) {
-    let bestMoves = [];
-    let maxFlipped = -1;
-
-    for (const cellIndex of emptyCells) {
-        for (const cardElement of availableCards) {
-            const cardId = cardElement.dataset.id;
-            const cardInfo = CARD_DATA.find(c => c.id === cardId);
-            const flippedCount = simulatePlacement(cellIndex, cardInfo, 'p2');
-
-            if (flippedCount > maxFlipped) {
-                maxFlipped = flippedCount;
-                bestMoves = [{ cellIndex, cardElement }];
-            } else if (flippedCount === maxFlipped) {
-                bestMoves.push({ cellIndex, cardElement });
-            }
+function evaluateBoard() {
+    let score = 0;
+    // 自分のカードが多いほどプラス
+    for (let i = 0; i < 9; i++) {
+        if (boardState[i] !== null) {
+            if (boardState[i].owner === 'p2') score += 10;
+            else if (boardState[i].owner === 'p1') score -= 10;
         }
     }
-    return bestMoves.length > 0 ? bestMoves[Math.floor(Math.random() * bestMoves.length)] : null;
+    return score;
 }
 
 /**
- * Type B: 鉄壁防御型 (Lv 5-7)
- * - 角や端を優先して陣取り、自分の強い数値を一番外側（敵側）へ向ける安全地帯構築
+ * ミニマックス再帰関数
+ * @param {number} depth - 残り探索深さ
+ * @param {boolean} isMaximizing - 現在ターンがAI(p2)の場合はtrue、プレイヤー(p1)の場合はfalse
+ * @param {number} alpha
+ * @param {number} beta
+ * @param {Array} p2CardsData
+ * @param {Array} p1CardsData
+ * @param {Array} emptyCells
+ * @returns {number} 評価値
  */
-function getMoveTypeB(emptyCells, availableCards) {
-    let bestMoves = [];
-    let maxScore = -Infinity;
-
-    for (const cellIndex of emptyCells) {
-        // 角や端の評価点
-        let cellWeight = 0;
-        if ([0, 2, 6, 8].includes(cellIndex)) cellWeight = 20;
-        else if ([1, 3, 5, 7].includes(cellIndex)) cellWeight = 10;
-        else cellWeight = 0;
-
-        for (const cardElement of availableCards) {
-            const cardId = cardElement.dataset.id;
-            const cardInfo = CARD_DATA.find(c => c.id === cardId);
-
-            // 露出スコア: 壁ではない開けた方向へ高い数値が向いているかを評価
-            let exposureScore = 0;
-            if (Math.floor(cellIndex / 3) > 0) exposureScore += cardInfo.stats[0]; // 上が開いている
-            if (cellIndex % 3 < 2) exposureScore += cardInfo.stats[1]; // 右が開いている
-            if (Math.floor(cellIndex / 3) < 2) exposureScore += cardInfo.stats[2]; // 下が開いている
-            if (cellIndex % 3 > 0) exposureScore += cardInfo.stats[3]; // 左が開いている
-
-            const flippedCount = simulatePlacement(cellIndex, cardInfo, 'p2');
-
-            const score = cellWeight + exposureScore + (flippedCount * 2);
-
-            if (score > maxScore) {
-                maxScore = score;
-                bestMoves = [{ cellIndex, cardElement }];
-            } else if (score === maxScore) {
-                bestMoves.push({ cellIndex, cardElement });
-            }
-        }
+function minimax(depth, isMaximizing, alpha, beta, p2CardsData, p1CardsData, emptyCells) {
+    if (depth === 0 || emptyCells.length === 0 || p2CardsData.length === 0 || p1CardsData.length === 0) {
+        // ヒューリスティック評価値を返す
+        // ※深度が0になったら、あるいはゲーム終了時ならその盤面のスコア
+        return evaluateBoard();
     }
-    return bestMoves.length > 0 ? bestMoves[Math.floor(Math.random() * bestMoves.length)] : null;
-}
 
-/**
- * Type C: 策士（先読み）型 (Lv 8-10)
- * - 自分が置いた後、次にプレイヤーが繰り出してくる「最大の反撃」を計算し、
- *   自分が最終的に生き残る・コンボを決められる手を探す
- */
-function getMoveTypeC(emptyCells, availableCards) {
-    let bestMoves = [];
-    let maxNetScore = -Infinity;
+    if (isMaximizing) {
+        let maxEval = -Infinity;
+        for (const cellIndex of emptyCells) {
+            for (const card of p2CardsData) {
+                const originalBoardState = boardState.map(c => c ? { ...c, stats: [...c.stats], owner: c.owner, id: c.id } : null);
+                const originalActiveSpecialRules = [...activeSpecialRules];
 
-    const p1HandDiv = document.getElementById('hand-player1');
-    const p1AvailableCards = Array.from(p1HandDiv.querySelectorAll('.card:not(.played)'));
+                placeCardOnBoard(cellIndex, card.info, 'p2');
 
-    for (const cellIndex of emptyCells) {
-        for (const cardElement of availableCards) {
-            const cardId = cardElement.dataset.id;
-            const cardInfo = CARD_DATA.find(c => c.id === cardId);
+                const remainingCards = p2CardsData.filter(c => c.info.id !== card.info.id);
+                const remainingCells = emptyCells.filter(idx => idx !== cellIndex);
 
-            // 1. まず自分が置いた状況を仮想的に作る（boardStateを書き換えるためディープコピー）
-            const originalBoardState = boardState.map(cell => cell ? { ...cell, stats: [...cell.stats], owner: cell.owner, id: cell.id } : null);
-            const originalActiveSpecialRules = [...activeSpecialRules];
+                const ev = minimax(depth - 1, false, alpha, beta, remainingCards, p1CardsData, remainingCells);
 
-            const result = placeCardOnBoard(cellIndex, cardInfo, 'p2');
-            const p2Flipped = result.flipped.length;
+                for (let i = 0; i < 9; i++) { boardState[i] = originalBoardState[i]; }
+                activeSpecialRules.length = 0;
+                originalActiveSpecialRules.forEach(r => activeSpecialRules.push(r));
 
-            // 2. 次のターンのプレイヤー(p1)の最大の反撃をシミュレート
-            let maxP1Flipped = 0;
-            const remainingEmpty = [];
-            for (let i = 0; i < 9; i++) {
-                if (boardState[i] === null) remainingEmpty.push(i);
-            }
-
-            if (remainingEmpty.length > 0 && p1AvailableCards.length > 0) {
-                for (const p1Cell of remainingEmpty) {
-                    for (const p1CardEl of p1AvailableCards) {
-                        const p1CardInfo = CARD_DATA.find(c => c.id === p1CardEl.dataset.id);
-                        // p1の仮想プレイ（simulatePlacementはさらに内部で状態を戻してくれる）
-                        const p1Flipped = simulatePlacement(p1Cell, p1CardInfo, 'p1');
-                        if (p1Flipped > maxP1Flipped) {
-                            maxP1Flipped = p1Flipped;
-                        }
-                    }
+                maxEval = Math.max(maxEval, ev);
+                alpha = Math.max(alpha, ev);
+                if (beta <= alpha) {
+                    break; // Beta cutoff
                 }
             }
-
-            // 盤面を元に戻す
-            for (let i = 0; i < 9; i++) {
-                boardState[i] = originalBoardState[i];
-            }
-            activeSpecialRules.length = 0;
-            originalActiveSpecialRules.forEach(r => activeSpecialRules.push(r));
-
-            // 純利益の計算：自分が今回取れる枚数(x10) - 相手に次取られる想定枚数(x15) 
-            // マイナスを重く見積ることで、罠にはまらないようにする
-            // 同スコア時はTypeBの防御的配置（exposureScore）が高いものを少し優遇
-            let exposureScore = 0;
-            if (Math.floor(cellIndex / 3) > 0) exposureScore += cardInfo.stats[0];
-            if (cellIndex % 3 < 2) exposureScore += cardInfo.stats[1];
-            if (Math.floor(cellIndex / 3) < 2) exposureScore += cardInfo.stats[2];
-            if (cellIndex % 3 > 0) exposureScore += cardInfo.stats[3];
-
-            const netScore = (p2Flipped * 10) - (maxP1Flipped * 15) + exposureScore;
-
-            if (netScore > maxNetScore) {
-                maxNetScore = netScore;
-                bestMoves = [{ cellIndex, cardElement }];
-            } else if (netScore === maxNetScore) {
-                bestMoves.push({ cellIndex, cardElement });
-            }
+            if (beta <= alpha) break;
         }
+        return maxEval;
+    } else {
+        // プレイヤー(p1)のターン
+        let minEval = Infinity;
+        for (const cellIndex of emptyCells) {
+            for (const card of p1CardsData) {
+                const originalBoardState = boardState.map(c => c ? { ...c, stats: [...c.stats], owner: c.owner, id: c.id } : null);
+                const originalActiveSpecialRules = [...activeSpecialRules];
+
+                placeCardOnBoard(cellIndex, card.info, 'p1');
+
+                const remainingCards = p1CardsData.filter(c => c.info.id !== card.info.id);
+                const remainingCells = emptyCells.filter(idx => idx !== cellIndex);
+
+                const ev = minimax(depth - 1, true, alpha, beta, p2CardsData, remainingCards, remainingCells);
+
+                for (let i = 0; i < 9; i++) { boardState[i] = originalBoardState[i]; }
+                activeSpecialRules.length = 0;
+                originalActiveSpecialRules.forEach(r => activeSpecialRules.push(r));
+
+                minEval = Math.min(minEval, ev);
+                beta = Math.min(beta, ev);
+                if (beta <= alpha) {
+                    break; // Alpha cutoff
+                }
+            }
+            if (beta <= alpha) break;
+        }
+        return minEval;
     }
-    return bestMoves.length > 0 ? bestMoves[Math.floor(Math.random() * bestMoves.length)] : null;
 }
 
 /**
