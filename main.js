@@ -343,7 +343,8 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
     screenGame.classList.add('active');
 
     let rules;
-    let npcLevel = parseInt(document.getElementById('npc-level-input').value) || 5;
+    let npcStrength = parseInt(document.getElementById('npc-strength-level-input').value) || 3;
+    let cardLevel = 5; // デフォルト中間
 
     if (mode === 'story' && currentStoryNpcId) {
         const npc = NPC_DATA.find(n => n.id === currentStoryNpcId);
@@ -359,7 +360,9 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
                 matchType: 'advance', // ストーリーモードは自分の手札から使う
                 isTutorial: currentStoryNpcId === 'npc_00'
             };
-            npcLevel = npc.baseLevel;
+            // ストーリーモードではデータのものを優先、未設定なら3(中間)とカードレベルを適用
+            npcStrength = npc.strengthLevel ? npc.strengthLevel : 3;
+            cardLevel = npc.baseLevel || 5;
         }
     } else {
         rules = {
@@ -372,6 +375,12 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
             tradeRule: document.getElementById('select-trade-rule').value,
             matchType: matchType
         };
+        // CPU戦（フリーバトル時）は思考レベルからカードの強さを自動算出
+        if (npcStrength === 1) cardLevel = 1;       // Lv1~2メイン
+        else if (npcStrength === 2) cardLevel = 4;  // Lv3~5
+        else if (npcStrength === 3) cardLevel = 6;  // Lv5~7
+        else if (npcStrength === 4) cardLevel = 8;  // Lv7~9
+        else if (npcStrength === 5) cardLevel = 10; // Lv9~10
     }
 
     const container = document.getElementById('game-container');
@@ -397,7 +406,7 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
     }
 
     const internalMode = (mode === 'story') ? 'pvc' : mode;
-    initGame(internalMode, rules, p1Deck, npcLevel, p2Deck);
+    initGame(internalMode, rules, p1Deck, cardLevel, p2Deck, npcStrength);
 }
 
 /* --- ストーリーモード関連の管理 --- */
@@ -680,7 +689,7 @@ window.setupUI = function () {
 
 // NPCレベルスライダーのリアルタイム表示更新
 document.addEventListener('DOMContentLoaded', () => {
-    const levelInput = document.getElementById('npc-level-input');
+    const levelInput = document.getElementById('npc-strength-level-input');
     const levelDisplay = document.getElementById('npc-level-value');
 
     if (levelInput && levelDisplay) {
@@ -963,7 +972,7 @@ function showResultScreen(result) {
         titleEl.style.color = 'var(--color-p1)';
         screenResult.classList.add('win-effect');
         if (!isTutorialNpc) {
-            updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+            updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: document.getElementById('npc-strength-level-input') ? parseInt(document.getElementById('npc-strength-level-input').value) || 3 : 3, mode: pendingGameMode });
         }
 
         // ストーリーモードで勝利かつ未討伐のNPCだった場合の進行処理
@@ -991,14 +1000,14 @@ function showResultScreen(result) {
         titleEl.style.color = 'var(--color-p2)';
         screenResult.classList.add('lose-effect');
         if (!isTutorialNpc) {
-            updateStats({ result: 'loss', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+            updateStats({ result: 'loss', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: document.getElementById('npc-strength-level-input') ? parseInt(document.getElementById('npc-strength-level-input').value) || 3 : 3, mode: pendingGameMode });
         }
     } else {
         if (typeof playSE === 'function') playSE('draw');
         titleEl.textContent = 'DRAW';
         titleEl.style.color = 'white';
         if (!isTutorialNpc) {
-            updateStats({ result: 'draw', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: parseInt(document.getElementById('npc-level-input').value) || 5, mode: pendingGameMode });
+            updateStats({ result: 'draw', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: document.getElementById('npc-strength-level-input') ? parseInt(document.getElementById('npc-strength-level-input').value) || 3 : 3, mode: pendingGameMode });
         }
     }
 
