@@ -5,6 +5,7 @@
 
 // グローバルなDOM要素
 const screenTitle = document.getElementById('screen-title');
+let isProcessingPlacement = false; // カード配置から裏返し完了までの入力ロックフラグ
 const screenStory = document.getElementById('screen-story');
 const screenFreeBattle = document.getElementById('screen-free-battle');
 const screenGame = document.getElementById('screen-game');
@@ -34,6 +35,7 @@ const btnResetData = document.getElementById('btn-reset-data');
 const btnSettings = document.getElementById('btn-settings');
 const btnSettingsClose = document.getElementById('btn-settings-close');
 const settingsModal = document.getElementById('settings-modal');
+const btnSurrender = document.getElementById('btn-surrender');
 
 const gameBoard = document.getElementById('game-board');
 const handP1 = document.getElementById('hand-player1');
@@ -104,6 +106,17 @@ if (settingsModal) {
     settingsModal.addEventListener('click', (e) => {
         if (e.target === settingsModal) {
             settingsModal.classList.add('hidden');
+        }
+    });
+}
+if (btnSurrender) {
+    btnSurrender.addEventListener('click', () => {
+        if (typeof isTutorialMode !== 'undefined' && isTutorialMode) {
+            alert('チュートリアル中はリタイアできません。');
+            return;
+        }
+        if (confirm('対局をリタイアしますか？\n（敗北扱いとなり、トレードルールが適用されます）')) {
+            handleSurrender();
         }
     });
 }
@@ -749,6 +762,8 @@ function handleHandCardClick(cardElement, owner) {
 }
 
 async function handleCellClick(index, cellElement) {
+    // 配置処理中、または自分のターンでなければ入力を受け付けない
+    if (isProcessingPlacement || currentTurn !== 'p1') return;
     if (!selectedCardElement || boardState[index] !== null) return;
 
     // チュートリアル制限
@@ -762,6 +777,7 @@ async function handleCellClick(index, cellElement) {
     const owner = selectedCardElement.dataset.owner;
     const cardInfo = CARD_DATA.find(c => c.id === cardId);
 
+    isProcessingPlacement = true; // 配置処理開始
     const result = placeCardOnBoard(index, cardInfo, owner);
     await finalizePlacementUI(index, cellElement, result);
 }
@@ -801,12 +817,14 @@ async function finalizePlacementUI(cellIndex, cellElement, result) {
         await new Promise(resolve => setTimeout(resolve, 800));
     }
 
-    // チュートリアル用の演出（一時停止と強調）
-    if (typeof isTutorialMode !== 'undefined' && isTutorialMode && result.flipped.length > 0) {
+    // 解説演出（設定が有効、またはチュートリアル中の場合に実行）
+    const showExpSetting = document.getElementById('setting-rule-explanation')?.checked ?? true;
+    if ((isTutorialMode || showExpSetting) && result.flipped.length > 0) {
         await showTutorialFlipExplanation(cellIndex, result);
     }
 
     await processFlippedCards(result.flipped, owner);
+    isProcessingPlacement = false; // 配置処理完了
     checkAndEndTurn();
 }
 
@@ -841,23 +859,36 @@ async function showTutorialFlipExplanation(placedIndex, result) {
     const tutorialText = document.getElementById('tutorial-text');
     if (!tutorialBox || !tutorialText) return;
 
-    const originalContent = tutorialText.innerHTML;
-    let explanation = "教官：「いいわね！<br>";
+    // 設定で解説演出がOFFになっている場合はスキップ（チュートリアルモード時は強制表示）
+    const isTut = typeof isTutorialMode !== 'undefined' && isTutorialMode;
+    const showExpSetting = document.getElementById('setting-rule-explanation')?.checked ?? true;
+    if (!isTut && !showExpSetting) return;
 
-    // 配列化された詳細データを元にメッセージを作成
     const details = result.flipDetails || [];
-    if (details.length > 0) {
-        // 代表的な理由を1つ選ぶ（特殊ルール優先）
-        const hasSame = details.some(d => d.reason === 'same');
-        const hasPlus = details.some(d => d.reason === 'plus');
+    if (details.length === 0) return;
 
-        if (hasSame) {
-            explanation += "同じ数字が2箇所以上で一致したわ。『セイム』発動よ！」";
-        } else if (hasPlus) {
-            explanation += "数字の合計が同じ箇所が2つ以上あるわ。『プラス』発動よ！」";
-        } else {
-            explanation += "接している数字が相手より大きいから、裏返せるわ。」";
-        }
+    const originalContent = tutorialText.innerHTML;
+    let explanation = isTut ? "教官：「いいわね！<br>" : "";
+
+    // 種別ごとの解説メッセージ構築
+    const hasSame = details.some(d => d.reason === 'same' && !d.isWall);
+    const hasWallSame = details.some(d => d.reason === 'same' && d.isWall);
+    const hasPlus = details.some(d => d.reason === 'plus');
+    const hasCombo = details.some(d => d.isCombo);
+    const hasNormal = details.some(d => d.reason === 'normal');
+
+    if (hasSame && hasPlus) {
+        explanation += isTut ? "『セイム』と『プラス』が同時に決まったわ！すごいじゃない！」" : "『セイム』＆『プラス』同時発動！";
+    } else if (hasSame) {
+        explanation += isTut ? "同じ数字が2箇所以上で一致したわ。『セイム』発動よ！」" : "『セイム』発動！";
+    } else if (hasWallSame) {
+        explanation += isTut ? "壁を『A(10)』として数える『ウォールセイム』が決まったわね！」" : "『ウォールセイム』発動！";
+    } else if (hasPlus) {
+        explanation += isTut ? "隣り合う数字の合計が同じ箇所が2つ以上あるわ。『プラス』発動よ！」" : "『プラス』発動！";
+    } else if (hasCombo) {
+        explanation += isTut ? "奪ったカードがさらに隣を圧倒したわ！『連鎖（コンボ）』発生よ！」" : "『コンボ』発生！";
+    } else if (hasNormal) {
+        explanation += isTut ? "接している数字が相手より大きいから、裏返せるわ。」" : "数値比較によりカードを奪取！";
     }
 
     tutorialText.innerHTML = explanation + "<br><small>(クリックまたはタップで続けます)</small>";
@@ -866,8 +897,10 @@ async function showTutorialFlipExplanation(placedIndex, result) {
     // ハイライト処理
     const highlights = [];
     for (const detail of details) {
-        // コンボの場合はコンボ元の数字もハイライトする等の拡張が可能ですが、基本は配置カードと対象カード
+        // 配置カードの数字を強調
         highlights.push(highlightCardNumber(detail.placedIndex, detail.myStat));
+
+        // 相手カードの数字（または壁）を強調
         if (detail.flippedIndex !== null) {
             highlights.push(highlightCardNumber(detail.flippedIndex, detail.enStat));
         }
@@ -879,7 +912,6 @@ async function showTutorialFlipExplanation(placedIndex, result) {
             window.removeEventListener('touchstart', resume);
             resolve();
         };
-        // 配置クリックのイベントバブリングによる即時解除を防ぐため、少し遅らせて登録
         setTimeout(() => {
             window.addEventListener('click', resume);
             window.addEventListener('touchstart', resume);
@@ -967,11 +999,11 @@ window.processFlippedCards = async function (flippedIndices, newOwner) {
                         cardElem.classList.remove('flip-anim');
                         updateScoreDisplay();
                         resolve();
-                    }, 200); // フリップ完了後の短い余韻
-                }, 300); // 裏返るタイミング
+                    }, 200 * getSpeedMultiplier()); // フリップ完了後の短い余韻
+                }, 300 * getSpeedMultiplier()); // 裏返るタイミング
             });
             // 次のカードへ移る前のわずかなウェイト（連鎖感の演出）
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 100 * getSpeedMultiplier()));
         }
     }
 };
@@ -982,9 +1014,9 @@ window.checkAndEndTurn = function () {
     const result = checkGameOver(counts.p1, counts.p2);
     if (result) {
         if (result.winner === 'draw' && gameConfig.suddenDeath) {
-            setTimeout(() => startSuddenDeath(), 1000);
+            setTimeout(() => startSuddenDeath(), 1000 * getSpeedMultiplier());
         } else {
-            setTimeout(() => showResultScreen(result), 1000);
+            setTimeout(() => showResultScreen(result), 1000 * getSpeedMultiplier());
         }
     } else {
         currentTurn = currentTurn === 'p1' ? 'p2' : 'p1';
@@ -994,12 +1026,48 @@ window.checkAndEndTurn = function () {
             tutorialStep++;
             advanceTutorialStep();
             // チュートリアルスクリプトが強制的にターン権を上書きした際のためにUIを更新
-            setTimeout(() => updateTurnDisplay(), 50);
+            setTimeout(() => updateTurnDisplay(), 50 * getSpeedMultiplier());
         } else if (gameMode === 'pvc' && currentTurn === 'p2') {
-            setTimeout(playCPUTurn, 1000);
+            setTimeout(playCPUTurn, 1000 * getSpeedMultiplier());
+        }
+    }
+
+    // P1のターンの間だけサレンダーボタンを表示（CPU戦またはPvP）
+    if (btnSurrender) {
+        if (!result && currentTurn === 'p1') {
+            btnSurrender.style.display = 'flex';
+        } else {
+            btnSurrender.style.display = 'none';
         }
     }
 };
+
+/**
+ * サレンダー（リタイア）処理
+ */
+function handleSurrender() {
+    if (typeof playSE === 'function') playSE('click');
+
+    // 現在のスコアを取得
+    const counts = getHandCounts();
+    let p1Score = counts.p1;
+    let p2Score = counts.p2;
+    boardState.forEach(cell => {
+        if (cell) {
+            if (cell.owner === 'p1') p1Score++;
+            else p2Score++;
+        }
+    });
+
+    // 強制的にP2を勝者とする
+    const result = {
+        p1Score: p1Score,
+        p2Score: p2Score,
+        winner: 'p2'
+    };
+
+    showResultScreen(result);
+}
 
 function getHandCounts() {
     const p1 = 5 - document.querySelectorAll('#hand-player1 .card.played').length;
@@ -1560,7 +1628,9 @@ function saveRuleSettings() {
         elemental: document.getElementById('rule-elemental').checked,
         tradeRule: document.getElementById('select-trade-rule').value,
         matchMode: document.querySelector('input[name="match-mode"]:checked')?.value || 'free',
-        npcLevel: document.getElementById('npc-level-input').value
+        npcLevel: document.getElementById('npc-strength-level-input')?.value || '3',
+        gameSpeed: document.getElementById('game-speed-input')?.value || '5',
+        showExplanation: document.getElementById('setting-rule-explanation')?.checked ?? true
     };
     localStorage.setItem('triple_triad_rules', JSON.stringify(rules));
 }
@@ -1583,7 +1653,19 @@ function loadRuleSettings() {
                 if (radio) radio.checked = true;
             }
             if (rules.npcLevel !== undefined) {
-                document.getElementById('npc-level-input').value = rules.npcLevel;
+                const npcLevelEl = document.getElementById('npc-strength-level-input');
+                if (npcLevelEl) npcLevelEl.value = rules.npcLevel;
+            }
+            if (rules.gameSpeed !== undefined) {
+                const speedEl = document.getElementById('game-speed-input');
+                if (speedEl) {
+                    speedEl.value = rules.gameSpeed;
+                    updateCSSSpeedMultiplier(rules.gameSpeed);
+                }
+            }
+            if (rules.showExplanation !== undefined) {
+                const expEl = document.getElementById('setting-rule-explanation');
+                if (expEl) expEl.checked = rules.showExplanation;
             }
         } catch (e) {
             console.error('Failed to parse rule settings', e);
@@ -1622,6 +1704,27 @@ function updatePlayerNameUI() {
 }
 
 /**
+ * 対戦スピードの倍率を取得する (JSのsetTimeout用)
+ * スピード5 (最速) = 倍率1
+ * スピード1 (最遅) = 倍率3 程度に調整
+ */
+window.getSpeedMultiplier = function () {
+    const speed = parseInt(document.getElementById('game-speed-input')?.value || '5');
+    // 5 -> 1.0, 4 -> 1.5, 3 -> 2.0, 2 -> 2.5, 1 -> 3.0
+    return 1 + (5 - speed) * 0.5;
+};
+
+/**
+ * CSS変数に倍率を反映する
+ */
+function updateCSSSpeedMultiplier(speedValue) {
+    const speed = parseInt(speedValue);
+    // CSSのアニメーション時間にかける倍率
+    const multiplier = 1 + (5 - speed) * 0.5;
+    document.documentElement.style.setProperty('--speed-multiplier', multiplier);
+}
+
+/**
  * 現在の対戦相手名を取得する
  */
 function getOpponentName() {
@@ -1654,8 +1757,19 @@ if (tradeSelect) tradeSelect.addEventListener('change', saveRuleSettings);
 document.querySelectorAll('input[name="match-mode"]').forEach(radio => {
     radio.addEventListener('change', saveRuleSettings);
 });
-const npcLevelInput = document.getElementById('npc-level-input');
+const npcLevelInput = document.getElementById('npc-strength-level-input');
 if (npcLevelInput) npcLevelInput.addEventListener('change', saveRuleSettings);
+
+const expToggle = document.getElementById('setting-rule-explanation');
+if (expToggle) expToggle.addEventListener('change', saveRuleSettings);
+
+const speedInput = document.getElementById('game-speed-input');
+if (speedInput) {
+    speedInput.addEventListener('input', (e) => {
+        updateCSSSpeedMultiplier(e.target.value);
+    });
+    speedInput.addEventListener('change', saveRuleSettings);
+}
 
 // プレイヤー名入力のリスナー
 const playerNameInput = document.getElementById('player-name-input');

@@ -3,7 +3,16 @@
  * CPUモード時の敵（Player 2）の行動ロジック
  */
 
+let isAIThinking = false; // AIが思考中かどうかのフラグ
+
 function playCPUTurn() {
+    // 既に思考中か、そもそも自分のターンでなければ実行しない
+    if (isAIThinking || currentTurn !== 'p2') {
+        console.log("AI execution blocked: already thinking or not NPC turn");
+        return;
+    }
+
+    isAIThinking = true;
     // 盤面の空いているマスを探す
     const emptyCells = [];
     for (let i = 0; i < 9; i++) {
@@ -121,8 +130,8 @@ function playCPUTurn() {
         setTimeout(() => {
             const cellElement = document.getElementById(`cell-${targetCellIndex}`);
             executeCPUPlacement(cardElement, cellElement, targetCellIndex);
-        }, 500);
-    }, 500);
+        }, 500 * getSpeedMultiplier());
+    }, 500 * getSpeedMultiplier());
 }
 
 // ----------------------------------------------------
@@ -261,9 +270,18 @@ async function executeCPUPlacement(cardElement, cellElement, cellIndex) {
         showSpecialRuleEffect(result.rules);
     }
 
+    // 解説演出（設定が有効、またはチュートリアル中の場合に実行）
+    const showExpSetting = document.getElementById('setting-rule-explanation')?.checked ?? true;
+    if ((isTutorialMode || showExpSetting) && result.flipped.length > 0) {
+        if (typeof showTutorialFlipExplanation === 'function') {
+            await showTutorialFlipExplanation(cellIndex, result);
+        }
+    }
+
     // 2. 裏返されたカードのアニメーション処理
     await processFlippedCards(result.flipped, owner);
 
     // 3. 終了判定チェック、なければターン交代
+    isAIThinking = false; // 配置完了したら思考フラグを解除
     checkAndEndTurn();
 }

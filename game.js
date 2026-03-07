@@ -15,6 +15,7 @@ let activeSpecialRules = [];
 
 // チュートリアル用状態管理
 let isTutorialMode = false;
+let currentTutorialTargetRule = null; // チュートリアルで重点解説するルール ('basic', 'same', 'plus', 'combo', 'sameWall')
 let tutorialStep = 0;
 
 // ルールの有効化設定
@@ -67,6 +68,14 @@ function initGame(mode, rules = null, playerHand = null, cardLevel = 5, player2H
     }
 
     isTutorialMode = gameConfig.isTutorial || false;
+    currentTutorialTargetRule = null;
+    if (isTutorialMode) {
+        if (currentStoryNpcId === 'npc_00') currentTutorialTargetRule = 'basic';
+        else if (currentStoryNpcId === 'npc_tut_same') currentTutorialTargetRule = 'same';
+        else if (currentStoryNpcId === 'npc_tut_plus') currentTutorialTargetRule = 'plus';
+        else if (currentStoryNpcId === 'npc_tut_combo') currentTutorialTargetRule = 'combo';
+        else if (currentStoryNpcId === 'npc_tut_same_wall') currentTutorialTargetRule = 'sameWall';
+    }
     tutorialStep = isTutorialMode ? 1 : 0;
 
     if (isTutorialMode) {
@@ -118,7 +127,7 @@ function initGame(mode, rules = null, playerHand = null, cardLevel = 5, player2H
             showGameStartEffect(startText, color);
             setTimeout(() => {
                 advanceTutorialStep();
-            }, 2000);
+            }, 2000 * getSpeedMultiplier());
         });
     } else {
         // ルーレット演出の呼び出し
@@ -132,7 +141,7 @@ function initGame(mode, rules = null, playerHand = null, cardLevel = 5, player2H
                 showGameStartEffect(startText, color);
 
                 if (gameMode === 'pvc' && currentTurn === 'p2') {
-                    setTimeout(playCPUTurn, 2000);
+                    setTimeout(playCPUTurn, 2000 * getSpeedMultiplier());
                 }
             });
         });
@@ -180,7 +189,7 @@ function showRulesIntroAnimation(config, onComplete) {
         setTimeout(() => {
             el.remove();
             showNext();
-        }, DISPLAY_MS);
+        }, DISPLAY_MS * getSpeedMultiplier());
     }
     const INITIAL_DELAY = 500; // 盤面が表示されてから最初のルールが出るまでの待ち時間
     setTimeout(showNext, INITIAL_DELAY);
@@ -267,9 +276,9 @@ function playTurnRoulette(finalTurn, onComplete) {
                     }
                     if (gameArea) gameArea.style.pointerEvents = '';
                     onComplete();
-                }, 800);
-            }, 1200); // 結果表示時間
-        }, 3000);
+                }, 800 * getSpeedMultiplier());
+            }, 1200 * getSpeedMultiplier()); // 結果表示時間
+        }, 3000 * getSpeedMultiplier());
     }, 100);
 }
 
@@ -284,7 +293,7 @@ function showGameStartEffect(text, color) {
 
     setTimeout(() => {
         if (effectContainer) effectContainer.remove();
-    }, 2000);
+    }, 2000 * getSpeedMultiplier());
 }
 
 function placeCardOnBoard(boardIndex, cardInfo, owner) {
