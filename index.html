@@ -90,7 +90,7 @@
                     <button id="btn-settings-close" class="btn-settings-close">✕</button>
                 </div>
 
-                <h3 class="settings-section-title">� プレイヤー</h3>
+                <h3 class="settings-section-title">👤 プレイヤー</h3>
                 <div class="player-settings">
                     <div class="settings-input-group">
                         <span>名前</span>
@@ -98,7 +98,7 @@
                     </div>
                 </div>
 
-                <h3 class="settings-section-title">�🔊 サウンド</h3>
+                <h3 class="settings-section-title">🔊 サウンド</h3>
                 <div class="audio-settings">
                     <div class="audio-slider-group">
                         <span>BGM音量</span>
@@ -266,6 +266,16 @@
                     <span class="score" id="score-player2">5</span>
                 </div>
             </header>
+            <!-- サレンダー（リタイア）ボタン -->
+            <div class="game-controls">
+                <button id="btn-surrender" class="btn-surrender">
+                    <svg viewBox="0 0 24 24" class="btn-icon">
+                        <path
+                            d="M12.45 16h2.09L13 17.5l-1.45-1.5zM8 18v2h8v-2H8zm4-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14.5l-1 1-1-1V14h2.01v2.5zV11H7V9h10v2h-4v2h1v1.5l1 1h-2l-1-1V13h-1v-2h1v-4h2v2h2V7h-2V5h-2v2H9v2h2v2H9v2h2v1.5z" />
+                    </svg>
+                    リタイア
+                </button>
+            </div>
             <div id="active-rules-display" class="active-rules-display"></div>
 
 
@@ -528,7 +538,7 @@
 
         <!-- バージョン情報 -->
         <footer class="game-footer">
-            <div id="version-display" class="version-display">v1.5.2</div>
+            <div id="version-display" class="version-display">v1.5.3</div>
         </footer>
     </div>
 
