@@ -188,83 +188,77 @@ function showRulesIntroAnimation(config, onComplete) {
 
 
 function playTurnRoulette(finalTurn, onComplete) {
+    const screenGame = document.getElementById('screen-game');
     const indicator = document.getElementById('turn-indicator');
     const gameArea = document.querySelector('.game-area');
 
     // 演出中は盤面操作をブロック
     if (gameArea) gameArea.style.pointerEvents = 'none';
 
-    // 画面中央へ移動させて拡大表示（初期準備）
-    indicator.style.transition = 'none';
-    indicator.style.transform = 'translateY(35vh) scale(2)';
-    indicator.style.zIndex = '100';
+    // 既存のインジケーターを一時的に非表示
+    if (indicator) indicator.style.opacity = '0';
 
-    let flashes = 0;
-    // 回数を1.5倍程度に増やし、じっくり見せる
-    const maxFlashes = 15 + Math.floor(Math.random() * 8);
-    let currentShow = 'p1';
-    let delay = 15; // 初期のフラッシュ間隔（ミリ秒）
+    // ルーレットコンテナの作成
+    const container = document.createElement('div');
+    container.className = 'roulette-container';
 
-    function flash() {
-        flashes++;
-        currentShow = currentShow === 'p1' ? 'p2' : 'p1';
+    // 正四面体の作成
+    const tetra = document.createElement('div');
+    tetra.className = 'tetrahedron tetra-rotating';
 
-        // ルーレットの点滅に合わせてSEを鳴らす
-        if (typeof playSE === 'function') playSE('click');
+    // 各面の作成
+    const faces = ['bottom', 'front', 'left', 'right'];
+    faces.forEach(faceName => {
+        const face = document.createElement('div');
+        face.className = `tetra-face ${faceName}`;
+        tetra.appendChild(face);
+    });
 
-        if (flashes >= maxFlashes) {
-            // 最終結果で固定
-            currentShow = finalTurn;
-            const playerName = localStorage.getItem('playerName') || 'スコール';
-            const opponentName = (typeof getOpponentName === 'function') ? getOpponentName() : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
-            const text = currentShow === 'p1' ? `${playerName.toUpperCase()} FIRST` : `${opponentName.toUpperCase()} FIRST`;
-            const color = currentShow === 'p1' ? 'var(--color-p1)' : 'var(--color-p2)';
+    container.appendChild(tetra);
+    screenGame.appendChild(container);
 
-            indicator.textContent = text;
-            indicator.style.color = color;
-            indicator.style.textShadow = `0 0 25px ${color}, 0 0 40px white`; // 決定時の発光を強化
+    // SE: 開始
+    if (typeof playSE === 'function') playSE('click');
 
-            // 決定時のSE
-            if (typeof playSE === 'function') playSE('place');
+    // 演出時間
+    const ROTATION_TIME = 2000; // 2秒間回転
 
-            // 結果を画面中央で少し（0.8秒）見せた後、元の位置へスライド移動
+    setTimeout(() => {
+        // 回転アニメーションを停止し、結果のポーズへ
+        tetra.classList.remove('tetra-rotating');
+
+        // 先端が指した方の「逆」が開始
+        // tetra-result-p1: 先端が上（P2）を向く -> P1開始
+        // tetra-result-p2: 先端が下（P1）を向く -> P2開始
+        const resultClass = (finalTurn === 'p1') ? 'tetra-result-p1' : 'tetra-result-p2';
+        tetra.classList.add(resultClass);
+
+        // 決定時のSE
+        if (typeof playSE === 'function') playSE('place');
+
+        // 結果を少し見せた後に片付け
+        setTimeout(() => {
+            container.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            container.style.opacity = '0';
+            container.style.transform = 'translate(-50%, -50%) scale(0)';
+
             setTimeout(() => {
-                indicator.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                indicator.style.transform = 'translateY(0) scale(1)';
+                container.remove();
 
-                setTimeout(() => {
-                    // スライド後、スタイルをクリーンアップしゲーム開始
-                    indicator.style.transition = '';
-                    indicator.style.transform = '';
-                    indicator.style.textShadow = '';
-                    indicator.style.zIndex = '';
+                // インジケーターの復旧と開始テキスト表示
+                if (indicator) {
+                    indicator.style.opacity = '1';
                     const playerName = localStorage.getItem('playerName') || 'スコール';
                     const opponentName = (typeof getOpponentName === 'function') ? getOpponentName() : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
                     indicator.textContent = `TURN: ${currentTurn === 'p1' ? playerName.toUpperCase() : opponentName.toUpperCase()}`;
+                }
 
-                    // ブロック解除
-                    if (gameArea) gameArea.style.pointerEvents = '';
-                    onComplete();
-                }, 500); // スライド時間分待つ
-            }, 800); // 決定画面の待機時間も半減（1.8秒 -> 0.8秒）
-            return;
-        }
-
-        // フラッシュ中のテキスト切り替え
-        const playerName = localStorage.getItem('playerName') || 'スコール';
-        const opponentName = (typeof getOpponentName === 'function') ? getOpponentName() : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
-        const text = currentShow === 'p1' ? playerName.toUpperCase() : opponentName.toUpperCase();
-        const color = currentShow === 'p1' ? 'var(--color-p1)' : 'var(--color-p2)';
-
-        indicator.textContent = text;
-        indicator.style.color = color;
-
-        // 徐々に遅くする（時間を伸ばすため増分を調整）
-        delay += 9;
-        setTimeout(flash, delay);
-    }
-
-    flash();
+                // ブロック解除
+                if (gameArea) gameArea.style.pointerEvents = '';
+                onComplete();
+            }, 500);
+        }, 1500);
+    }, ROTATION_TIME);
 }
 
 function showGameStartEffect(text, color) {
@@ -636,6 +630,7 @@ let playerStats = {
     wins: 0,
     losses: 0,
     draws: 0,
+    winStreak: 0,     // 現在の連勝数
     levelStats: {},   // { "1": {wins:0, losses:0, draws:0}, ... }
     maxScoreDiff: 0,  // 最大点差勝利
     recentMatches: [] // { date, opponent, myScore, enemyScore, result }
@@ -651,6 +646,7 @@ function loadStats() {
             if (!playerStats.levelStats) playerStats.levelStats = {};
             if (!playerStats.recentMatches) playerStats.recentMatches = [];
             if (playerStats.maxScoreDiff === undefined) playerStats.maxScoreDiff = 0;
+            if (playerStats.winStreak === undefined) playerStats.winStreak = 0;
         } catch (e) {
             console.error("Failed to parse stats", e);
         }
@@ -668,9 +664,16 @@ function updateStats(details) {
     const opponentLevel = details.opponentLevel || 5;
     const mode = details.mode || 'pvp';
 
-    if (result === 'win') playerStats.wins++;
-    else if (result === 'loss') playerStats.losses++;
-    else if (result === 'draw') playerStats.draws++;
+    if (result === 'win') {
+        playerStats.wins++;
+        playerStats.winStreak++;
+    } else if (result === 'loss') {
+        playerStats.losses++;
+        playerStats.winStreak = 0;
+    } else if (result === 'draw') {
+        playerStats.draws++;
+        // 引き分けは連勝を維持するがカウントは増やさない（仕様判断）
+    }
 
     // CPU戦のレベル別記録
     if (mode === 'pvc') {

@@ -1070,6 +1070,15 @@ function showResultScreen(result) {
     const oldStoryMsg = resultBox.querySelector('.story-unlock-message');
     if (oldStoryMsg) oldStoryMsg.remove();
 
+    // 獲得金額表示エリアのリセット
+    const moneyGainArea = document.getElementById('result-money-gain');
+    const moneyAmountEl = document.getElementById('result-money-amount');
+    const tradeMoneyGainArea = document.getElementById('trade-money-gain');
+    const tradeMoneyAmountEl = document.getElementById('trade-money-amount');
+
+    if (moneyGainArea) moneyGainArea.style.display = 'none';
+    if (tradeMoneyGainArea) tradeMoneyGainArea.style.display = 'none';
+
     // アニメーションを再トリガーするために一時的に非表示→表示するテクニック
     const titleEl = document.getElementById('result-title');
     titleEl.style.animation = 'none';
@@ -1142,6 +1151,8 @@ function showResultScreen(result) {
     // お金獲得処理
     if (gainedMoney > 0 && typeof window.addMoney === 'function') {
         window.addMoney(gainedMoney);
+        if (moneyAmountEl) moneyAmountEl.textContent = gainedMoney;
+        if (tradeMoneyAmountEl) tradeMoneyAmountEl.textContent = gainedMoney;
     }
 
     // FF8原作風の二段階演出：文字をバーンと出した後、2秒後にスコアやトレードをフェードイン
@@ -1150,15 +1161,8 @@ function showResultScreen(result) {
         handlePostGameTrade(result);
 
         if (gainedMoney > 0) {
-            setTimeout(() => {
-                const moneyMsg = document.createElement('div');
-                moneyMsg.className = 'trade-message-area money-gain-message';
-                moneyMsg.innerHTML = `<strong>${gainedMoney} G 獲得！</strong>`;
-                moneyMsg.style.color = '#FFD700';
-                moneyMsg.style.marginTop = '10px';
-                moneyMsg.style.fontSize = '1.2rem';
-                resultBox.appendChild(moneyMsg);
-            }, 500);
+            if (moneyGainArea) moneyGainArea.style.display = 'flex';
+            if (tradeMoneyGainArea) tradeMoneyGainArea.style.display = 'flex';
         }
     }, 2000);
 }
@@ -1875,9 +1879,33 @@ function drawPack(packType) {
 
     if (pool.length === 0) return cards;
 
+    // レベルごとの重み設定
+    // レベルが1上がるごとに、10 -> 5 -> 3 -> 2 -> 1 と当たりにくくなるように設定
+    const getWeight = (lvl, type) => {
+        const minLvl = type === 'normal' ? 1 : 3;
+        const diff = lvl - minLvl;
+        const weights = [10, 5, 3, 2, 1]; // レベル差に応じた重み
+        return weights[Math.min(diff, weights.length - 1)];
+    };
+
     for (let i = 0; i < 3; i++) {
-        const r = Math.floor(Math.random() * pool.length);
-        cards.push(pool[r]);
+        // 重み付け抽選の実施
+        const totalWeight = pool.reduce((sum, card) => sum + getWeight(card.level, packType), 0);
+        let r = Math.random() * totalWeight;
+
+        for (const card of pool) {
+            const weight = getWeight(card.level, packType);
+            if (r < weight) {
+                cards.push(card);
+                break;
+            }
+            r -= weight;
+        }
+
+        // 万が一漏れた場合のフォールバック
+        if (cards.length < i + 1) {
+            cards.push(pool[Math.floor(Math.random() * pool.length)]);
+        }
     }
     return cards;
 }

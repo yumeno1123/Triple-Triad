@@ -1139,6 +1139,7 @@ body {
     }
 }
 
+
 .result-box,
 .trade-box {
     background: var(--bg-panel);
@@ -1147,6 +1148,64 @@ body {
     text-align: center;
     width: 90%;
     border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 獲得金額表示のスタイル */
+.result-money-gain {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-heading);
+    animation: moneyGainPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.gain-label {
+    font-size: 1rem;
+    color: #ffd700;
+    opacity: 0.8;
+}
+
+.gain-amount {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+    animation: moneyNumberShine 2s infinite alternate;
+}
+
+.gain-unit {
+    font-size: 1.2rem;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+@keyframes moneyGainPop {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes moneyNumberShine {
+    from {
+        text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+    }
+
+    to {
+        text-shadow: 0 0 15px #fff, 0 0 30px #ffd700, 0 0 40px #ffd700;
+        transform: scale(1.05);
+    }
 }
 
 .trade-grid {
@@ -1963,43 +2022,74 @@ body {
    SHOP & MONEY UI
    ========================================================================= */
 
-/* 共通ヘッダー（所持金表示） */
+/* 案2：画面下部に固定して表示（ステータスバー形式） */
 .global-header {
-    position: absolute;
-    top: env(safe-area-inset-top, 10px);
-    right: max(10px, env(safe-area-inset-right, 10px));
-    z-index: 500;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
     pointer-events: none;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s, transform 0.3s;
+    display: flex;
+    justify-content: center;
+    /* 中央に配置 */
+    padding-bottom: env(safe-area-inset-bottom, 5px);
+    /* iPhoneのバー対策 */
 }
 
 .global-header.hidden {
     opacity: 0;
+    transform: translateY(100%);
+    /* 完全に下に隠す */
     pointer-events: none;
 }
 
 .money-display {
-    background: rgba(10, 10, 20, 0.8);
-    border: 2px solid #FFD700;
-    border-radius: 20px;
-    padding: 5px 15px;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4), inset 0 0 5px rgba(255, 215, 0, 0.2);
+    background: rgba(0, 0, 0, 0.85);
+    /* 落ち着いた黒背景 */
+    border-top: 2px solid #FFD700;
+    /* 上辺だけに金をあしらう */
+    border-left: 2px solid #FFD700;
+    border-right: 2px solid #FFD700;
+    border-bottom: none;
+    border-radius: 15px 15px 0 0;
+    /* 上側だけ丸く */
+    padding: 10px 40px;
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.6);
     font-family: var(--font-heading);
     color: white;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-weight: bold;
     text-shadow: 1px 1px 3px black;
     pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.money-display::before {
+    content: 'G';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: radial-gradient(circle at 30% 30%, #fff2ac 0%, #FFD700 100%);
+    color: #4a3c00;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+    border: 1px solid #4a3c00;
 }
 
 .money-display #player-money-display {
     color: #FFD700;
+    letter-spacing: 0.1em;
 }
 
 .money-unit {
-    font-size: 0.9em;
-    color: #ccc;
-    margin-left: 2px;
+    display: none;
 }
 
 /* ショップ画面全体 */
@@ -2096,4 +2186,90 @@ body {
     font-weight: bold;
     z-index: 20;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================
+   ルーレット演出用：3D正四面体 (テトラヘドロン)
+   ========================================== */
+
+.roulette-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    perspective: 1000px;
+    z-index: 1000;
+}
+
+.tetrahedron {
+    position: relative;
+    width: 0;
+    height: 0;
+    transform-style: preserve-3d;
+    transition: transform 1s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+/* 正四面体の各面 */
+.tetra-face {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 50px solid transparent;
+    border-right: 50px solid transparent;
+    border-bottom: 86.6px solid rgba(255, 215, 0, 0.85);
+    /* 三角形の高さ 50 * sqrt(3) */
+    transform-origin: 50% 66.6%;
+    /* 重心付近を回転の中心にする */
+    filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6));
+}
+
+/* 各面の配置 */
+.tetra-face.bottom {
+    transform: rotateX(90deg) translateZ(-28.8px);
+    border-bottom-color: rgba(218, 165, 32, 0.9);
+    /* Goldenrod (少し濃い金) */
+}
+
+.tetra-face.front {
+    transform: rotateY(0deg) rotateX(19.5deg) translateZ(28.8px);
+    border-bottom-color: rgba(255, 255, 255, 0.95);
+    /* 光が当たっている面として白に近い金 */
+}
+
+.tetra-face.left {
+    transform: rotateY(120deg) rotateX(19.5deg) translateZ(28.8px);
+    border-bottom-color: rgba(255, 215, 0, 0.8);
+    /* Gold */
+}
+
+.tetra-face.right {
+    transform: rotateY(240deg) rotateX(19.5deg) translateZ(28.8px);
+    border-bottom-color: rgba(255, 223, 0, 0.85);
+    /* Bright Gold */
+}
+
+/* 回転アニメーション */
+.tetra-rotating {
+    animation: tetra-spin 0.5s infinite linear;
+}
+
+@keyframes tetra-spin {
+    from {
+        transform: rotateY(0deg) rotateX(0deg) rotateZ(0deg);
+    }
+
+    to {
+        transform: rotateY(360deg) rotateX(360deg) rotateZ(360deg);
+    }
+}
+
+/* 停止時のポーズ設定 (JSからクラスを付与することを想定) */
+.tetra-result-p1 {
+    /* 先端がP2（上）を指す＝P1（下）が先行 */
+    transform: rotateX(-120deg) rotateY(0deg);
+}
+
+.tetra-result-p2 {
+    /* 先端がP1（下）を指す＝P2（上）が先行 */
+    transform: rotateX(60deg) rotateY(0deg);
 }

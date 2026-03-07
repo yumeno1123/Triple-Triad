@@ -298,6 +298,14 @@
                         <span> - </span>
                         <span id="final-score-p2" class="player2-text"></span>
                     </div>
+                    <div id="result-money-gain" class="result-money-gain">
+                        <span class="gain-label">GAINED:</span>
+                        <span id="result-money-amount" class="gain-amount">0</span>
+                        <span class="gain-unit">G</span>
+                    </div>
+                    <div id="result-money-breakdown" class="result-money-breakdown hidden">
+                        <!-- JSで動的に詳細を流し込む -->
+                    </div>
                     <button id="btn-back-title" class="btn-primary">タイトルへ戻る</button>
                 </div>
             </div>
@@ -309,6 +317,12 @@
                 <h2>SELECT REWARD</h2>
                 <p id="trade-info">Pick your card(s)</p>
                 <div id="trade-cards-grid" class="trade-grid"></div>
+                <!-- トレード画面用の獲得金額表示 -->
+                <div id="trade-money-gain" class="result-money-gain" style="display: none;">
+                    <span class="gain-label">GAINED:</span>
+                    <span id="trade-money-amount" class="gain-amount">0</span>
+                    <span class="gain-unit">G</span>
+                </div>
                 <button id="btn-confirm-trade" class="btn-primary"
                     style="display: none; margin-top: 20px;">トレードを確定する</button>
             </div>
@@ -514,7 +528,7 @@
 
         <!-- バージョン情報 -->
         <footer class="game-footer">
-            <div id="version-display" class="version-display">v1.5.0</div>
+            <div id="version-display" class="version-display">v1.5.1</div>
         </footer>
     </div>
 
