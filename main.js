@@ -920,6 +920,7 @@ async function showTutorialFlipExplanation(placedIndex, result) {
 
     highlights.forEach(h => { if (h) h.remove(); });
     tutorialText.innerHTML = originalContent;
+    tutorialBox.classList.add('hidden');
 }
 
 /**
