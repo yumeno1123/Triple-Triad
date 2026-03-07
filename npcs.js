@@ -7,15 +7,15 @@
  * rules: このNPC戦で強制適用される特殊ルールの配列 (例: ['open', 'same'], なしの場合は空配列)
  */
 const AREA_DATA = [
-    { id: 'area_tutorial', name: 'チュートリアル', unlockCondition: null },
-    { id: 'area_balamb_garden', name: 'バラムガーデン', unlockCondition: 'npc_00' },
-    { id: 'area_dollet', name: 'ドール', unlockCondition: 'npc_04' },
-    { id: 'area_galbadia', name: 'ガルバディア', unlockCondition: 'npc_dollet_new_01' },
-    { id: 'area_fh', name: 'F.H.', unlockCondition: 'npc_gal_new_01' },
-    { id: 'area_trabia', name: 'トラビア', unlockCondition: 'npc_fh_new_01' },
-    { id: 'area_esthar', name: 'エスタ', unlockCondition: 'npc_tra_01' },
-    { id: 'area_lunar', name: '宇宙', unlockCondition: 'npc_est_new_01' },
-    { id: 'area_balamb_cc', name: 'バラムガーデン (CC団)', unlockCondition: 'npc_05' }
+    { id: 'area_tutorial', name: 'チュートリアル', unlockCondition: null, tradeRule: 'none' },
+    { id: 'area_balamb_garden', name: 'バラムガーデン', unlockCondition: 'npc_00', tradeRule: 'one' },
+    { id: 'area_dollet', name: 'ドール', unlockCondition: 'npc_04', tradeRule: 'diff' },
+    { id: 'area_galbadia', name: 'ガルバディア', unlockCondition: 'npc_dollet_new_01', tradeRule: 'one' },
+    { id: 'area_fh', name: 'F.H.', unlockCondition: 'npc_gal_new_01', tradeRule: 'direct' },
+    { id: 'area_trabia', name: 'トラビア', unlockCondition: 'npc_fh_new_01', tradeRule: 'diff' },
+    { id: 'area_esthar', name: 'エスタ', unlockCondition: 'npc_tra_01', tradeRule: 'all' },
+    { id: 'area_lunar', name: '宇宙', unlockCondition: 'npc_est_new_01', tradeRule: 'all' },
+    { id: 'area_balamb_cc', name: 'バラムガーデン (CC団)', unlockCondition: 'npc_05', tradeRule: 'direct' }
 ];
 
 const NPC_DATA = [
@@ -134,7 +134,7 @@ const NPC_DATA = [
         deckType: 'level',
         baseLevel: 4,
         rules: ['random', 'open'],
-        unlockCondition: 'npc_05'
+        unlockCondition: 'npc_04'
     },
     {
         id: 'npc_dollet_new_01',
@@ -166,7 +166,7 @@ const NPC_DATA = [
         deckType: 'level',
         baseLevel: 3,
         rules: ['same', 'open'],
-        unlockCondition: 'npc_dollet_02'
+        unlockCondition: 'npc_dollet_new_01'
     },
     {
         id: 'npc_gal_new_01',
@@ -198,7 +198,7 @@ const NPC_DATA = [
         deckType: 'level',
         baseLevel: 4,
         rules: ['sudden-death', 'elemental', 'open'],
-        unlockCondition: 'npc_gal_02'
+        unlockCondition: 'npc_gal_new_01'
     },
     {
         id: 'npc_fh_new_01',
@@ -230,7 +230,7 @@ const NPC_DATA = [
         deckType: 'level',
         baseLevel: 4,
         rules: ['random', 'open'],
-        unlockCondition: 'npc_fh_02'
+        unlockCondition: 'npc_fh_new_01'
     },
     {
         id: 'npc_tra_01',
@@ -262,7 +262,7 @@ const NPC_DATA = [
         deckType: 'level',
         baseLevel: 6,
         rules: ['elemental', 'same-wall', 'open'],
-        unlockCondition: 'npc_tra_new_02'
+        unlockCondition: 'npc_tra_01'
     },
     {
         id: 'npc_est_new_01',
@@ -294,7 +294,7 @@ const NPC_DATA = [
         deckType: 'level',
         baseLevel: 8,
         rules: ['open', 'same', 'plus', 'same-wall', 'random', 'sudden-death', 'elemental'],
-        unlockCondition: 'npc_est_02'
+        unlockCondition: 'npc_est_new_01'
     },
     {
         id: 'npc_lunar_01',

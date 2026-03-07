@@ -52,7 +52,11 @@ let p1SelectedDeck = [];
 let p2SelectedDeck = [];
 
 /* --- イベントリスナーの登録 --- */
-btnStory.addEventListener('click', showStoryScreen);
+btnStory.addEventListener('click', () => {
+    currentStoryAreaId = null;
+    currentStoryAreaName = null;
+    showStoryScreen();
+});
 btnFreeBattle.addEventListener('click', showFreeBattleScreen);
 btnStoryBack.addEventListener('click', showTitleScreen);
 if (btnStoryAreaBack) btnStoryAreaBack.addEventListener('click', () => showStoryAreaSelection());
@@ -351,6 +355,9 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
     if (mode === 'story' && currentStoryNpcId) {
         const npc = NPC_DATA.find(n => n.id === currentStoryNpcId);
         if (npc) {
+            const area = AREA_DATA.find(a => a.id === npc.areaId);
+            const areaTradeRule = area && area.tradeRule ? area.tradeRule : 'one';
+
             rules = {
                 open: npc.rules.includes('open'),
                 same: npc.rules.includes('same'),
@@ -358,9 +365,9 @@ function startConfiguredGame(mode, matchType, p1Deck, p2Deck) {
                 plus: npc.rules.includes('plus'),
                 suddenDeath: npc.rules.includes('sudden-death') || npc.rules.includes('suddendeath'),
                 elemental: npc.rules.includes('elemental'),
-                tradeRule: 'one',
+                tradeRule: areaTradeRule,
                 matchType: 'advance', // ストーリーモードは自分の手札から使う
-                isTutorial: currentStoryNpcId === 'npc_00'
+                isTutorial: currentStoryNpcId === 'npc_00' || currentStoryNpcId.startsWith('npc_tut_')
             };
             // ストーリーモードではデータのものを優先、未設定なら3(中間)とカードレベルを適用
             npcStrength = npc.strengthLevel ? npc.strengthLevel : 3;
@@ -453,17 +460,21 @@ window.renderStoryAreaList = function () {
             const defeatedCount = areaNPCs.filter(n => defeatedNPCs.includes(n.id)).length;
             const totalCount = areaNPCs.length;
 
+            const ruleNameObj = { 'one': 'ワン', 'diff': 'ディフ', 'direct': 'ダイレクト', 'all': 'オール', 'none': 'なし' };
+            const tradeRuleStr = area.tradeRule ? (ruleNameObj[area.tradeRule] || area.tradeRule) : 'ワン';
+
             card.innerHTML = `
                 <div class="npc-info">
-                    <div class="npc-header">
-                        <h3>${area.name}</h3>
-                        ${defeatedCount === totalCount && totalCount > 0 ? '<span class="beaten-badge">COMPLETE!</span>' : ''}
+                    <div class="npc-header" style="flex-direction: column; align-items: flex-start;">
+                        <h3 style="margin-bottom: 2px;">${area.name}</h3>
+                        <div style="font-size: 0.65em; color: var(--color-secondary); opacity: 0.8;">[トレードルール: ${tradeRuleStr}]</div>
                     </div>
-                    <div class="npc-rules">進行度: <span>${defeatedCount} / ${totalCount}</span></div>
+                    <div class="npc-rules" style="margin-top: 5px;">進行度: <span>${defeatedCount} / ${totalCount}</span></div>
                 </div>
                 <div class="npc-action">
                     <button class="btn-primary btn-challenge" data-id="${area.id}">移動する</button>
                 </div>
+                ${defeatedCount === totalCount ? '<span class="beaten-badge" style="position: absolute; top: 10px; right: 10px; z-index: 10;">COMPLETE!</span>' : ''}
             `;
             card.querySelector('.btn-challenge').addEventListener('click', () => {
                 showStoryNPCSelection(area.id, area.name);
@@ -493,9 +504,18 @@ window.showStoryNPCSelection = function (areaId, areaName) {
     currentStoryAreaId = areaId;
     currentStoryAreaName = areaName;
 
+    const area = AREA_DATA.find(a => a.id === areaId);
+    let tradeRuleDisplay = '';
+    if (area) {
+        const ruleNameObj = { 'one': 'ワン', 'diff': 'ディフ', 'direct': 'ダイレクト', 'all': 'オール', 'none': 'なし' };
+        const tr = area.tradeRule || 'one';
+        tradeRuleDisplay = `<div style="font-size:0.6em; color:var(--color-secondary); font-weight:normal; margin-top:4px; opacity: 0.8;">[トレードルール: ${ruleNameObj[tr]}]</div>`;
+    }
+
     document.getElementById('story-area-selection').classList.add('hidden');
     document.getElementById('story-npc-selection').classList.remove('hidden');
-    document.getElementById('story-current-area-name').textContent = areaName;
+    const headerEl = document.getElementById('story-current-area-name');
+    headerEl.innerHTML = `<div>${areaName}</div>${tradeRuleDisplay}`;
     renderStoryNPCList(areaId);
 };
 
@@ -859,8 +879,11 @@ async function showTutorialFlipExplanation(placedIndex, result) {
             window.removeEventListener('touchstart', resume);
             resolve();
         };
-        window.addEventListener('click', resume);
-        window.addEventListener('touchstart', resume);
+        // 配置クリックのイベントバブリングによる即時解除を防ぐため、少し遅らせて登録
+        setTimeout(() => {
+            window.addEventListener('click', resume);
+            window.addEventListener('touchstart', resume);
+        }, 100);
     });
 
     highlights.forEach(h => { if (h) h.remove(); });
@@ -892,8 +915,7 @@ function highlightCardNumber(boardIndex, statIndex) {
     highlight.style.position = 'absolute';
     highlight.style.left = '50%';
     highlight.style.top = '50%';
-    // 微調整: CSSのtransformで数字の真ん中に重なるよう調整する
-    highlight.style.transform = 'translate(-50%, -50%)';
+    // 微調整: CSS側で translate(-100%, -100%) とアニメーションを管理します
 
     statEl.appendChild(highlight);
     return highlight;
@@ -1119,6 +1141,11 @@ function handlePostGameTrade(gameResult) {
         return;
     }
 
+    if (gameConfig.isTutorial || gameConfig.tradeRule === 'none') {
+        showTradeMessage('TRADE EXCLUDED: NO REWARD / NO PENALTY');
+        return;
+    }
+
     if (!gameResult || gameResult.winner === 'draw') {
         return;
     }
@@ -1196,7 +1223,7 @@ function handleDefeatPenalty(gameResult) {
     if (lostCards.length > 0) {
         // インベントリから削除
         lostCards.forEach(card => removeCardFromInventory(card.id));
-        showTradeMessage(`PENALTY: LOST ${lostCards.length} CARD(S)`);
+        showLostCardsScreen(lostCards);
     } else {
         showTradeMessage('LUCKY: NO CARDS LOST');
     }
@@ -1313,16 +1340,64 @@ function renderCollection() {
 let selectedTradeCardIds = [];
 let maxSelectableCards = 0;
 let enemyTeamCards = [];
+let isLostCardsMode = false;
 
 function showTradeSelectionScreen(cards, maxCount) {
+    isLostCardsMode = false;
     maxSelectableCards = maxCount;
     enemyTeamCards = cards;
     selectedTradeCardIds = [];
     screenResult.classList.add('hidden');
     screenTrade.classList.remove('hidden');
     screenTrade.classList.add('active');
+
+    const tradeBoxTitle = document.querySelector('.trade-box h2');
+    if (tradeBoxTitle) {
+        tradeBoxTitle.textContent = 'SELECT REWARD';
+        tradeBoxTitle.style.color = '';
+    }
     document.getElementById('trade-info').textContent = `Pick ${maxCount} card(s)`;
+
+    // UIを初期状態（通常選択モード）に戻す
+    const confirmBtn = document.getElementById('btn-confirm-trade');
+    if (confirmBtn) {
+        confirmBtn.textContent = 'トレードを確定する';
+        confirmBtn.style.display = 'none';
+    }
+
     renderTradeGrid();
+}
+
+function showLostCardsScreen(lostCards) {
+    isLostCardsMode = true;
+    maxSelectableCards = 0; // 選択不可
+    enemyTeamCards = lostCards;
+    selectedTradeCardIds = lostCards.map(c => c.id);
+
+    screenResult.classList.add('hidden');
+    screenTrade.classList.remove('hidden');
+    screenTrade.classList.add('active');
+
+    const tradeBoxTitle = document.querySelector('.trade-box h2');
+    if (tradeBoxTitle) {
+        tradeBoxTitle.textContent = 'LOST CARDS...';
+        tradeBoxTitle.style.color = 'var(--color-p2)';
+    }
+    document.getElementById('trade-info').textContent = '以下のカードを奪われました';
+
+    renderTradeGrid();
+
+    // 全て選択済みに見せかけ、クリックを無効化する
+    document.querySelectorAll('.trade-card-item').forEach(el => {
+        el.classList.add('selected');
+        el.style.pointerEvents = 'none';
+    });
+
+    const confirmBtn = document.getElementById('btn-confirm-trade');
+    if (confirmBtn) {
+        confirmBtn.textContent = '確認する';
+        confirmBtn.style.display = 'block';
+    }
 }
 
 function renderTradeGrid() {
@@ -1363,10 +1438,17 @@ function toggleTradeSelection(card, element) {
 }
 
 document.getElementById('btn-confirm-trade').addEventListener('click', () => {
-    selectedTradeCardIds.forEach(id => addCardToInventory(id));
+    let msgText = '';
+    if (isLostCardsMode) {
+        msgText = 'LOST CARDS CONFIRMED';
+    } else {
+        selectedTradeCardIds.forEach(id => addCardToInventory(id));
+        msgText = 'TRADE COMPLETED!';
+    }
+
     const msg = document.createElement('div');
     msg.className = 'special-rule-effect';
-    msg.textContent = 'TRADE COMPLETED!';
+    msg.textContent = msgText;
     document.getElementById('screen-trade').appendChild(msg);
     setTimeout(() => {
         msg.remove();
