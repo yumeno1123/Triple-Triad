@@ -2273,3 +2273,174 @@ body {
     /* 先端がP1（下）を指す＝P2（上）が先行 */
     transform: rotateX(60deg) rotateY(0deg);
 }
+/* 賞金内訳のスタイリング */
+.result-money-breakdown {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px auto;
+    width: 240px;
+    font-size: 0.85rem;
+    color: #eee;
+    text-shadow: 1px 1px 2px black;
+    animation: fadeIn 0.5s ease forwards;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.result-money-breakdown.hidden {
+    display: none;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.breakdown-label {
+    opacity: 0.8;
+}
+
+.breakdown-value {
+    font-weight: bold;
+    color: #FFD700; /* Gold */
+}
+
+/* 合計の強調 */
+.breakdown-total {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: 3px;
+    padding-top: 3px;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* ==========================================
+   新ルーレット演出：サイバーパンク・ネオン・ダイアル
+   ========================================== */
+
+.neon-dial-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 280px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+.dial-outer-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05), 0 0 15px rgba(0, 0, 0, 0.5);
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(4px);
+}
+
+.dial-inner-ring {
+    position: absolute;
+    width: 85%;
+    height: 85%;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    animation: dial-rotate-slow 10s infinite linear;
+}
+
+@keyframes dial-rotate-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.dial-pointer-wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transition: transform 3s cubic-bezier(0.15, 0, 0.15, 1);
+}
+
+.dial-pointer {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 40px;
+    background: #fff;
+    box-shadow: 0 0 15px #fff, 0 0 30px #fff;
+    border-radius: 2px;
+    z-index: 10;
+}
+
+.dial-pointer::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 15px solid #fff;
+}
+
+/* プレイヤーセクター */
+.dial-sector {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    clip-path: polygon(50% 50%, 0 0, 100% 0);
+}
+
+.dial-sector.p1 {
+    background: linear-gradient(to bottom, var(--color-p1) 0%, transparent 100%);
+    opacity: 0.3;
+    transform: rotate(180deg); /* 180度（下）がP1 */
+}
+
+.dial-sector.p2 {
+    background: linear-gradient(to bottom, var(--color-p2) 0%, transparent 100%);
+    opacity: 0.3;
+    transform: rotate(0deg); /* 0度（上）がP2 */
+}
+
+/* 当選時の演出クラス */
+.dial-winner-p1 .dial-sector.p1 {
+    opacity: 0.8;
+    filter: brightness(1.5) drop-shadow(0 0 20px var(--color-p1));
+    transition: all 0.5s ease;
+}
+
+.dial-winner-p2 .dial-sector.p2 {
+    opacity: 0.8;
+    filter: brightness(1.5) drop-shadow(0 0 20px var(--color-p2));
+    transition: all 0.5s ease;
+}
+
+/* ハイテクな装飾パーツ */
+.dial-decor {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-heading);
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+}
+
+.dial-decor span {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    top: 50%;
+    transform: translateY(-50%);
+}

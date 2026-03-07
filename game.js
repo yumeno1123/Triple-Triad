@@ -192,73 +192,85 @@ function playTurnRoulette(finalTurn, onComplete) {
     const indicator = document.getElementById('turn-indicator');
     const gameArea = document.querySelector('.game-area');
 
-    // 演出中は盤面操作をブロック
     if (gameArea) gameArea.style.pointerEvents = 'none';
-
-    // 既存のインジケーターを一時的に非表示
     if (indicator) indicator.style.opacity = '0';
 
-    // ルーレットコンテナの作成
+    // 演出用コンテナの作成
     const container = document.createElement('div');
-    container.className = 'roulette-container';
-
-    // 正四面体の作成
-    const tetra = document.createElement('div');
-    tetra.className = 'tetrahedron tetra-rotating';
-
-    // 各面の作成
-    const faces = ['bottom', 'front', 'left', 'right'];
-    faces.forEach(faceName => {
-        const face = document.createElement('div');
-        face.className = `tetra-face ${faceName}`;
-        tetra.appendChild(face);
-    });
-
-    container.appendChild(tetra);
+    container.className = 'neon-dial-container';
+    container.innerHTML = `
+        <div class="dial-outer-ring"></div>
+        <div class="dial-inner-ring"></div>
+        <div class="dial-sector p1"></div>
+        <div class="dial-sector p2"></div>
+        <div class="dial-decor">
+            <span style="transform: rotate(0deg) translateY(-110px)">SYSTEM INITIALIZING...</span>
+            <span style="transform: rotate(90deg) translateY(-110px)">ANALYZING DATA...</span>
+            <span style="transform: rotate(180deg) translateY(-110px)">DETERMINING TURN...</span>
+            <span style="transform: rotate(270deg) translateY(-110px)">PROBABILITY CALC...</span>
+        </div>
+        <div class="dial-pointer-wrapper">
+            <div class="dial-pointer"></div>
+        </div>
+    `;
     screenGame.appendChild(container);
 
-    // SE: 開始
+    const pointerWrapper = container.querySelector('.dial-pointer-wrapper');
+
+    // SE: 起動音
     if (typeof playSE === 'function') playSE('click');
 
-    // 演出時間
-    const ROTATION_TIME = 2000; // 2秒間回転
+    // 回転アニメーションの設定
+    // 角度の計算: 0度(上)はP2, 180度(下)はP1
+    // ランダムに数回転（5〜8回転）させてからターゲットへ
+    const baseRotations = 5 + Math.floor(Math.random() * 3);
+    const targetAngle = (finalTurn === 'p1' ? 180 : 0);
+    const finalAngle = (baseRotations * 360) + targetAngle;
 
+    // 少し時間を置いてから回転開始（タメを作る）
     setTimeout(() => {
-        // 回転アニメーションを停止し、結果のポーズへ
-        tetra.classList.remove('tetra-rotating');
+        pointerWrapper.style.transform = `rotate(${finalAngle}deg)`;
 
-        // 先端が指した方の「逆」が開始
-        // tetra-result-p1: 先端が上（P2）を向く -> P1開始
-        // tetra-result-p2: 先端が下（P1）を向く -> P2開始
-        const resultClass = (finalTurn === 'p1') ? 'tetra-result-p1' : 'tetra-result-p2';
-        tetra.classList.add(resultClass);
+        // 回転中に一定間隔でSE（カチカチ音）を鳴らすシミュレーション
+        let currentTicks = 0;
+        const totalTicks = 20;
+        const tickInterval = setInterval(() => {
+            if (currentTicks >= totalTicks) {
+                clearInterval(tickInterval);
+                return;
+            }
+            if (typeof playSE === 'function') playSE('click');
+            currentTicks++;
+        }, 100);
 
-        // 決定時のSE
-        if (typeof playSE === 'function') playSE('place');
-
-        // 結果を少し見せた後に片付け
+        // 回転終了時（CSSのtransition-duration 3sに合わせる）
         setTimeout(() => {
-            container.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            container.style.opacity = '0';
-            container.style.transform = 'translate(-50%, -50%) scale(0)';
+            clearInterval(tickInterval);
 
+            // 当選エフェクト
+            container.classList.add(finalTurn === 'p1' ? 'dial-winner-p1' : 'dial-winner-p2');
+            if (typeof playSE === 'function') playSE('place');
+
+            // 決定したプレイヤーを強調
             setTimeout(() => {
-                container.remove();
+                container.style.transition = 'opacity 0.8s ease, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                container.style.opacity = '0';
+                container.style.transform = 'translate(-50%, -50%) scale(1.5)';
 
-                // インジケーターの復旧と開始テキスト表示
-                if (indicator) {
-                    indicator.style.opacity = '1';
-                    const playerName = localStorage.getItem('playerName') || 'スコール';
-                    const opponentName = (typeof getOpponentName === 'function') ? getOpponentName() : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
-                    indicator.textContent = `TURN: ${currentTurn === 'p1' ? playerName.toUpperCase() : opponentName.toUpperCase()}`;
-                }
-
-                // ブロック解除
-                if (gameArea) gameArea.style.pointerEvents = '';
-                onComplete();
-            }, 500);
-        }, 1500);
-    }, ROTATION_TIME);
+                setTimeout(() => {
+                    container.remove();
+                    if (indicator) {
+                        indicator.style.opacity = '1';
+                        const playerName = localStorage.getItem('playerName') || 'スコール';
+                        const opponentName = (typeof getOpponentName === 'function') ? getOpponentName() : (gameMode === 'pvc' ? 'CPU' : 'PLAYER 2');
+                        indicator.textContent = `TURN: ${currentTurn === 'p1' ? playerName.toUpperCase() : opponentName.toUpperCase()}`;
+                    }
+                    if (gameArea) gameArea.style.pointerEvents = '';
+                    onComplete();
+                }, 800);
+            }, 1200); // 結果表示時間
+        }, 3000);
+    }, 100);
 }
 
 function showGameStartEffect(text, color) {

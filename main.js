@@ -1099,6 +1099,7 @@ function showResultScreen(result) {
     }
 
     let gainedMoney = 0;
+    let breakdown = [];
 
     if (result.winner === 'p1') {
         if (typeof playSE === 'function') playSE('win');
@@ -1107,7 +1108,38 @@ function showResultScreen(result) {
         screenResult.classList.add('win-effect');
         if (!isTutorialNpc) {
             updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: opponentLevel, mode: pendingGameMode });
-            gainedMoney = opponentLevel * 20 + 50;
+
+            // --- 新しい賞金計算システム ---
+            const baseMoney = opponentLevel * 20 + 50;
+            breakdown.push({ label: '基本賞金', value: baseMoney });
+
+            // 1. 点差ボーナス (Perfect Bonus)
+            const diff = result.p1Score - result.p2Score;
+            const diffBonus = diff * 10;
+            if (diffBonus > 0) {
+                breakdown.push({ label: `勝利点差ボーナス (+${diff})`, value: diffBonus });
+            }
+
+            // 2. 特殊ルールボーナス (Complexity Bonus)
+            const ruleKeys = ['open', 'same', 'sameWall', 'plus', 'suddenDeath', 'randomHand', 'elemental'];
+            const activeRulesCount = ruleKeys.filter(key => gameConfig[key]).length;
+            if (activeRulesCount > 0) {
+                const complexityBonus = Math.floor(baseMoney * (activeRulesCount * 0.1));
+                breakdown.push({ label: `特殊ルールボーナス (${activeRulesCount}件)`, value: complexityBonus });
+            }
+
+            // 3. 連勝ボーナス (Winning Streak Bonus)
+            // Note: updateStatsで既にインクリメントされた後の値を参照
+            const streak = (typeof playerStats !== 'undefined' && playerStats.winStreak) ? playerStats.winStreak : 0;
+            if (streak >= 2) {
+                const streakMultiplier = Math.min(0.5, (streak - 1) * 0.1); // 2連勝から+10%ずつ、最大50%
+                const streakBonus = Math.floor(baseMoney * streakMultiplier);
+                if (streakBonus > 0) {
+                    breakdown.push({ label: `${streak}連勝ボーナス (+${Math.round(streakMultiplier * 100)}%)`, value: streakBonus });
+                }
+            }
+
+            gainedMoney = breakdown.reduce((sum, item) => sum + item.value, 0);
         }
 
         // ストーリーモードで勝利かつ未討伐のNPCだった場合の進行処理
@@ -1145,6 +1177,28 @@ function showResultScreen(result) {
         if (!isTutorialNpc) {
             updateStats({ result: 'draw', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: opponentLevel, mode: pendingGameMode });
             gainedMoney = opponentLevel * 10 + 20;
+        }
+    }
+
+    // 賞金内訳UIの構築
+    const breakdownEl = document.getElementById('result-money-breakdown');
+    if (breakdownEl) {
+        if (breakdown.length > 0) {
+            breakdownEl.innerHTML = '';
+            breakdown.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'breakdown-item';
+                div.innerHTML = `<span class="breakdown-label">${item.label}</span><span class="breakdown-value">+${item.value} G</span>`;
+                breakdownEl.appendChild(div);
+            });
+            // 合計行
+            const totalDiv = document.createElement('div');
+            totalDiv.className = 'breakdown-item breakdown-total';
+            totalDiv.innerHTML = `<span class="breakdown-label">合計獲得賞金</span><span class="breakdown-value">${gainedMoney} G</span>`;
+            breakdownEl.appendChild(totalDiv);
+            breakdownEl.classList.remove('hidden');
+        } else {
+            breakdownEl.classList.add('hidden');
         }
     }
 
@@ -1984,49 +2038,69 @@ function renderSellGrid() {
 
     if (typeof playerInventory === 'undefined' || typeof CARD_DATA === 'undefined') return;
 
-    const allOwnedCards = [];
-    for (const [id, count] of Object.entries(playerInventory)) {
-        if (count > 0) {
-            const cardInfo = CARD_DATA.find(c => c.id === id);
-            if (cardInfo) {
-                for (let i = 0; i < count; i++) {
-                    allOwnedCards.push({ ...cardInfo, uniqueRef: id + '_' + i });
+    // レベル（10〜1）の降順でグループ化して表示（コレクション画面に合わせる）
+    for (let level = 10; level >= 1; level--) {
+        const levelCards = [];
+        // 所持しているカードの中から、現在のレベルに一致するものを抽出
+        // ループを CARD_DATA 順に回すことで、同一レベル内での並び順を保証する
+        CARD_DATA.forEach(cardInfo => {
+            if (cardInfo.level === level && !cardInfo.isDebug) {
+                const count = playerInventory[cardInfo.id] || 0;
+                if (count > 0) {
+                    for (let i = 0; i < count; i++) {
+                        levelCards.push({ ...cardInfo, uniqueRef: cardInfo.id + '_' + i });
+                    }
                 }
             }
-        }
-    }
-
-    allOwnedCards.sort((a, b) => b.level - a.level || a.id.localeCompare(b.id));
-
-    allOwnedCards.forEach(card => {
-        const cardWrapper = document.createElement('div');
-        cardWrapper.className = 'collection-item';
-        cardWrapper.dataset.ref = card.uniqueRef;
-        cardWrapper.style.cursor = 'pointer';
-
-        const cardEl = createCardElement(card);
-        cardWrapper.appendChild(cardEl);
-
-        const priceLabel = document.createElement('div');
-        priceLabel.className = 'collection-count';
-        priceLabel.textContent = calculateSellPrice(card) + ' G';
-        cardWrapper.appendChild(priceLabel);
-
-        cardWrapper.addEventListener('click', () => {
-            if (typeof playSE === 'function') playSE('click');
-            const idx = sellSelectedCards.findIndex(c => c.uniqueRef === card.uniqueRef);
-            if (idx >= 0) {
-                sellSelectedCards.splice(idx, 1);
-                cardWrapper.classList.remove('sell-selected');
-            } else {
-                sellSelectedCards.push(card);
-                cardWrapper.classList.add('sell-selected');
-            }
-            updateSellTotalPrice();
         });
 
-        sellCardsGrid.appendChild(cardWrapper);
-    });
+        if (levelCards.length === 0) continue;
+
+        // レベルの見出しを作成
+        const levelHeader = document.createElement('div');
+        levelHeader.className = 'collection-level-header';
+        levelHeader.style.width = '100%';
+        levelHeader.style.marginTop = '10px';
+        levelHeader.style.marginBottom = '10px';
+        levelHeader.textContent = `LEVEL ${level}`;
+        sellCardsGrid.appendChild(levelHeader);
+
+        // そのレベルのカードを表示
+        levelCards.forEach(card => {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'collection-item';
+            cardWrapper.dataset.ref = card.uniqueRef;
+            cardWrapper.style.cursor = 'pointer';
+
+            const cardEl = createCardElement(card);
+            cardWrapper.appendChild(cardEl);
+
+            const priceLabel = document.createElement('div');
+            priceLabel.className = 'collection-count';
+            priceLabel.textContent = calculateSellPrice(card) + ' G';
+            cardWrapper.appendChild(priceLabel);
+
+            // 既に選択済みの場合はハイライト（再描画時の状態維持）
+            if (sellSelectedCards.some(c => c.uniqueRef === card.uniqueRef)) {
+                cardWrapper.classList.add('sell-selected');
+            }
+
+            cardWrapper.addEventListener('click', () => {
+                if (typeof playSE === 'function') playSE('click');
+                const idx = sellSelectedCards.findIndex(c => c.uniqueRef === card.uniqueRef);
+                if (idx >= 0) {
+                    sellSelectedCards.splice(idx, 1);
+                    cardWrapper.classList.remove('sell-selected');
+                } else {
+                    sellSelectedCards.push(card);
+                    cardWrapper.classList.add('sell-selected');
+                }
+                updateSellTotalPrice();
+            });
+
+            sellCardsGrid.appendChild(cardWrapper);
+        });
+    }
 }
 
 if (btnOpenSellModal) {
