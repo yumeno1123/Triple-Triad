@@ -1706,12 +1706,12 @@ function updatePlayerNameUI() {
 /**
  * 対戦スピードの倍率を取得する (JSのsetTimeout用)
  * スピード5 (最速) = 倍率1
- * スピード1 (最遅) = 倍率3 程度に調整
+ * スピード1 (最遅) = 倍率2 (旧スピード3相当) に調整
  */
 window.getSpeedMultiplier = function () {
     const speed = parseInt(document.getElementById('game-speed-input')?.value || '5');
-    // 5 -> 1.0, 4 -> 1.5, 3 -> 2.0, 2 -> 2.5, 1 -> 3.0
-    return 1 + (5 - speed) * 0.5;
+    // 5 -> 1.0, 4 -> 1.25, 3 -> 1.5, 2 -> 1.75, 1 -> 2.0
+    return 1 + (5 - speed) * 0.25;
 };
 
 /**
@@ -1719,8 +1719,8 @@ window.getSpeedMultiplier = function () {
  */
 function updateCSSSpeedMultiplier(speedValue) {
     const speed = parseInt(speedValue);
-    // CSSのアニメーション時間にかける倍率
-    const multiplier = 1 + (5 - speed) * 0.5;
+    // 5 -> 1.0, 1 -> 2.0 (旧3相当)
+    const multiplier = 1 + (5 - speed) * 0.25;
     document.documentElement.style.setProperty('--speed-multiplier', multiplier);
 }
 
