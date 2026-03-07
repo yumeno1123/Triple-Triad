@@ -1958,3 +1958,142 @@ body {
         transform: translate(-50%, -50%) scale(0.8);
     }
 }
+
+/* =========================================================================
+   SHOP & MONEY UI
+   ========================================================================= */
+
+/* 共通ヘッダー（所持金表示） */
+.global-header {
+    position: absolute;
+    top: env(safe-area-inset-top, 10px);
+    right: max(10px, env(safe-area-inset-right, 10px));
+    z-index: 500;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.global-header.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.money-display {
+    background: rgba(10, 10, 20, 0.8);
+    border: 2px solid #FFD700;
+    border-radius: 20px;
+    padding: 5px 15px;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4), inset 0 0 5px rgba(255, 215, 0, 0.2);
+    font-family: var(--font-heading);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 3px black;
+    pointer-events: auto;
+}
+
+.money-display #player-money-display {
+    color: #FFD700;
+}
+
+.money-unit {
+    font-size: 0.9em;
+    color: #ccc;
+    margin-left: 2px;
+}
+
+/* ショップ画面全体 */
+#screen-shop {
+    background: linear-gradient(to bottom, #110022 0%, #00001a 100%);
+}
+
+.shop-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+.shop-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.shop-content-area {
+    width: 90%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding-bottom: 40px;
+}
+
+.shop-buy-area,
+.shop-sell-area {
+    background: rgba(20, 20, 40, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.shop-pack-item {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.shop-pack-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+.btn-buy-pack {
+    min-width: 80px;
+}
+
+.btn-buy-pack:disabled {
+    background: #333 !important;
+    border-color: #555 !important;
+    color: #888 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.sell-modal-box {
+    background: linear-gradient(to bottom, #1a1a2e, #16213e);
+    border: 2px solid var(--color-p1);
+}
+
+/* カード売却時の選択状態 */
+.collection-item.sell-selected .card {
+    transform: translateY(-10px) scale(1.05);
+    filter: drop-shadow(0 0 10px #FFD700);
+}
+
+.collection-item.sell-selected::after {
+    content: '✓';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #FFD700;
+    color: black;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    z-index: 20;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}

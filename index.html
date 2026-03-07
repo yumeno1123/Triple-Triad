@@ -21,6 +21,13 @@
 
 <body>
     <div id="game-container">
+        <!-- 共通ヘッダー（所持金表示など） -->
+        <header id="global-header" class="global-header hidden">
+            <div class="money-display">
+                <span id="player-money-display">0</span> <span class="money-unit">G</span>
+            </div>
+        </header>
+
         <!-- タイトル・メニュー画面 -->
         <section id="screen-title" class="screen active">
             <div class="screen-scroll-wrapper">
@@ -49,6 +56,13 @@
                                 d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z" />
                         </svg>
                         カードコレクション
+                    </button>
+                    <button id="btn-shop" class="btn-secondary">
+                        <svg viewBox="0 0 24 24" class="btn-icon">
+                            <path
+                                d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z" />
+                        </svg>
+                        ショップ
                     </button>
                     <button id="btn-help" class="btn-secondary">
                         <svg viewBox="0 0 24 24" class="btn-icon">
@@ -349,6 +363,95 @@
                 style="margin-top:20px; margin-bottom:40px;">タイトルへ戻る</button>
         </section>
 
+        <!-- ショップ画面 -->
+        <section id="screen-shop" class="screen hidden">
+            <header class="shop-header">
+                <h2 style="font-family: var(--font-heading); color: #FFD700;">CARD SHOP</h2>
+                <button id="btn-shop-back-top" class="btn-secondary" style="margin-left:auto;">タイトルへ戻る</button>
+            </header>
+
+            <div class="screen-scroll-wrapper" style="padding-top:20px;">
+                <div class="shop-content-area">
+                    <!-- パック購入エリア -->
+                    <div class="shop-buy-area">
+                        <h3
+                            style="margin-bottom: 15px; color: var(--color-p1); border-bottom: 1px solid currentColor; padding-bottom: 5px;">
+                            BUY PACKS</h3>
+                        <div class="pack-list">
+                            <div class="shop-pack-item" data-pack-type="normal">
+                                <div class="pack-icon" style="font-size: 3rem; margin-right: 15px;">📦</div>
+                                <div class="pack-info" style="flex:1;">
+                                    <h4 style="margin:0 0 5px 0; font-size:1.2rem;">ノーマルパック</h4>
+                                    <p style="margin:0; font-size:0.9rem; opacity:0.8;">LV1〜5のカードが3枚入っています</p>
+                                </div>
+                                <button class="btn-primary btn-buy-pack" data-pack-type="normal" data-cost="100"
+                                    style="padding: 10px; font-weight:bold;">100 G<br><small>購入</small></button>
+                            </div>
+                            <div class="shop-pack-item" data-pack-type="rare" style="margin-top: 15px;">
+                                <div class="pack-icon" style="font-size: 3rem; margin-right: 15px;">✨</div>
+                                <div class="pack-info" style="flex:1;">
+                                    <h4 style="margin:0 0 5px 0; font-size:1.2rem; color: #FFD700;">レアパック</h4>
+                                    <p style="margin:0; font-size:0.9rem; opacity:0.8;">LV3〜7のカードが3枚入っています</p>
+                                </div>
+                                <button class="btn-primary btn-buy-pack" data-pack-type="rare" data-cost="500"
+                                    style="padding: 10px; font-weight:bold; background: linear-gradient(135deg, #a67c00, #bf953f);">500
+                                    G<br><small>購入</small></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- カード売却エリア -->
+                    <div class="shop-sell-area" style="margin-top: 30px;">
+                        <h3
+                            style="margin-bottom: 15px; color: var(--color-p2); border-bottom: 1px solid currentColor; padding-bottom: 5px;">
+                            SELL CARDS</h3>
+                        <p style="margin-bottom: 15px;">不要なカードを売却してGを獲得できます。</p>
+                        <button id="btn-open-sell-modal" class="btn-secondary" style="width: 100%;">カード売却画面を開く</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 購入結果アニメーション/表示レイヤー -->
+            <div id="pack-opening-overlay" class="hidden"
+                style="position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <h2 style="color: #FFD700; margin-bottom: 30px; font-family: var(--font-heading); font-size: 2rem;">
+                    カード獲得！</h2>
+                <div id="pack-cards-grid"
+                    style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; transform: scale(1.2);">
+                    <!-- 取得したカードを表示 -->
+                </div>
+                <button id="btn-close-pack" class="btn-primary">OK</button>
+            </div>
+        </section>
+
+        <!-- 売却モーダル -->
+        <div id="sell-modal" class="settings-modal-overlay hidden" style="z-index: 200;">
+            <div class="settings-modal-box sell-modal-box"
+                style="width: 90%; max-width: 600px; height: 80vh; display: flex; flex-direction: column;">
+                <div class="settings-modal-header" style="flex-shrink: 0;">
+                    <h2>SELL CARDS</h2>
+                    <button id="btn-sell-close" class="btn-settings-close">✕</button>
+                </div>
+                <div class="sell-info-area"
+                    style="flex-shrink: 0; padding: 15px 0; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 15px; text-align: center;">
+                    選択中のカード売却額: <span id="sell-total-price"
+                        style="color:#FFD700; font-weight:bold; font-size: 1.5rem;">0</span> G
+                    <button id="btn-execute-sell" class="btn-primary" disabled
+                        style="margin-left: 20px; padding: 10px 20px;">売却決定</button>
+                </div>
+                <div class="sell-controls" style="margin-bottom:10px; display:flex; gap:10px; justify-content:center;">
+                    <button id="btn-sell-select-all-duplicates" class="btn-secondary"
+                        style="padding: 5px 10px; font-size: 0.9em;">2枚以上被っているカードを選択</button>
+                    <button id="btn-sell-clear-selection" class="btn-secondary"
+                        style="padding: 5px 10px; font-size: 0.9em;">選択解除</button>
+                </div>
+                <div id="sell-cards-grid" class="collection-grid"
+                    style="flex-grow: 1; overflow-y: auto; padding: 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; justify-content: flex-start; align-content: flex-start; ">
+                    <!-- JSで動的に追加 -->
+                </div>
+            </div>
+        </div>
+
         <!-- 遊び方ガイド（モーダル） -->
         <section id="screen-help" class="screen hidden overlay">
             <div class="help-box">
@@ -411,7 +514,7 @@
 
         <!-- バージョン情報 -->
         <footer class="game-footer">
-            <div id="version-display" class="version-display">v1.4.9</div>
+            <div id="version-display" class="version-display">v1.5.0</div>
         </footer>
     </div>
 

@@ -1065,8 +1065,8 @@ function showResultScreen(result) {
     resultBox.classList.remove('show-details');
 
     // 既存の動的メッセージ（トレード結果など）をクリア
-    const oldMsg = resultBox.querySelector('.trade-message-area');
-    if (oldMsg) oldMsg.remove();
+    const oldMsg = resultBox.querySelectorAll('.trade-message-area');
+    oldMsg.forEach(el => el.remove());
     const oldStoryMsg = resultBox.querySelector('.story-unlock-message');
     if (oldStoryMsg) oldStoryMsg.remove();
 
@@ -1083,13 +1083,22 @@ function showResultScreen(result) {
     const isTutorialNpc = typeof currentStoryNpcId !== 'undefined' &&
         (currentStoryNpcId === 'npc_00' || currentStoryNpcId.startsWith('npc_tut_'));
 
+    let opponentLevel = document.getElementById('npc-strength-level-input') ? parseInt(document.getElementById('npc-strength-level-input').value) || 3 : 3;
+    if (pendingGameMode === 'story' && typeof currentStoryNpcId !== 'undefined') {
+        const npc = typeof NPC_DATA !== 'undefined' ? NPC_DATA.find(n => n.id === currentStoryNpcId) : null;
+        if (npc && npc.level) opponentLevel = npc.level;
+    }
+
+    let gainedMoney = 0;
+
     if (result.winner === 'p1') {
         if (typeof playSE === 'function') playSE('win');
         titleEl.textContent = 'YOU WIN!';
         titleEl.style.color = 'var(--color-p1)';
         screenResult.classList.add('win-effect');
         if (!isTutorialNpc) {
-            updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: document.getElementById('npc-strength-level-input') ? parseInt(document.getElementById('npc-strength-level-input').value) || 3 : 3, mode: pendingGameMode });
+            updateStats({ result: 'win', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: opponentLevel, mode: pendingGameMode });
+            gainedMoney = opponentLevel * 20 + 50;
         }
 
         // ストーリーモードで勝利かつ未討伐のNPCだった場合の進行処理
@@ -1117,21 +1126,40 @@ function showResultScreen(result) {
         titleEl.style.color = 'var(--color-p2)';
         screenResult.classList.add('lose-effect');
         if (!isTutorialNpc) {
-            updateStats({ result: 'loss', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: document.getElementById('npc-strength-level-input') ? parseInt(document.getElementById('npc-strength-level-input').value) || 3 : 3, mode: pendingGameMode });
+            updateStats({ result: 'loss', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: opponentLevel, mode: pendingGameMode });
+            gainedMoney = 10;
         }
     } else {
         if (typeof playSE === 'function') playSE('draw');
         titleEl.textContent = 'DRAW';
         titleEl.style.color = 'white';
         if (!isTutorialNpc) {
-            updateStats({ result: 'draw', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: document.getElementById('npc-strength-level-input') ? parseInt(document.getElementById('npc-strength-level-input').value) || 3 : 3, mode: pendingGameMode });
+            updateStats({ result: 'draw', myScore: result.p1Score, enemyScore: result.p2Score, opponentLevel: opponentLevel, mode: pendingGameMode });
+            gainedMoney = opponentLevel * 10 + 20;
         }
+    }
+
+    // お金獲得処理
+    if (gainedMoney > 0 && typeof window.addMoney === 'function') {
+        window.addMoney(gainedMoney);
     }
 
     // FF8原作風の二段階演出：文字をバーンと出した後、2秒後にスコアやトレードをフェードイン
     setTimeout(() => {
         resultBox.classList.add('show-details');
         handlePostGameTrade(result);
+
+        if (gainedMoney > 0) {
+            setTimeout(() => {
+                const moneyMsg = document.createElement('div');
+                moneyMsg.className = 'trade-message-area money-gain-message';
+                moneyMsg.innerHTML = `<strong>${gainedMoney} G 獲得！</strong>`;
+                moneyMsg.style.color = '#FFD700';
+                moneyMsg.style.marginTop = '10px';
+                moneyMsg.style.fontSize = '1.2rem';
+                resultBox.appendChild(moneyMsg);
+            }, 500);
+        }
     }, 2000);
 }
 
@@ -1711,3 +1739,342 @@ document.addEventListener('click', (e) => {
         if (typeof playSE === 'function') playSE('click');
     }
 });
+
+// ==========================================
+// お金・ショップ・売却システム
+// ==========================================
+
+let playerMoney = 0;
+
+window.loadMoney = function () {
+    const saved = localStorage.getItem('triple_triad_money');
+    if (saved) {
+        playerMoney = parseInt(saved, 10);
+    } else {
+        playerMoney = 0; // 初期値
+    }
+    updateMoneyUI();
+};
+
+window.saveMoney = function () {
+    localStorage.setItem('triple_triad_money', playerMoney.toString());
+    updateMoneyUI();
+};
+
+window.updateMoneyUI = function () {
+    const moneyDisplay = document.getElementById('player-money-display');
+    if (moneyDisplay) {
+        moneyDisplay.textContent = playerMoney;
+    }
+};
+
+window.addMoney = function (amount) {
+    if (amount > 0) {
+        playerMoney += amount;
+        saveMoney();
+        updateMoneyUI();
+        return true;
+    }
+    return false;
+};
+
+window.consumeMoney = function (amount) {
+    if (playerMoney >= amount) {
+        playerMoney -= amount;
+        saveMoney();
+        updateMoneyUI();
+        return true;
+    }
+    return false;
+};
+
+// 初期化時にお金もロード
+document.addEventListener('DOMContentLoaded', () => {
+    loadMoney();
+});
+
+const screenShop = document.getElementById('screen-shop');
+const btnShop = document.getElementById('btn-shop');
+const btnShopBackTop = document.getElementById('btn-shop-back-top');
+const globalHeader = document.getElementById('global-header');
+
+if (btnShop) {
+    btnShop.addEventListener('click', () => {
+        screenTitle.classList.remove('active');
+        screenTitle.classList.add('hidden');
+        screenShop.classList.remove('hidden');
+        screenShop.classList.add('active');
+        globalHeader.classList.remove('hidden');
+        if (typeof playSE === 'function') playSE('click');
+        updateMoneyUI();
+    });
+}
+
+if (btnShopBackTop) {
+    btnShopBackTop.addEventListener('click', () => {
+        screenShop.classList.remove('active');
+        screenShop.classList.add('hidden');
+        showTitleScreen();
+        globalHeader.classList.add('hidden');
+        if (typeof playSE === 'function') playSE('click');
+    });
+}
+
+// packOpening関連
+const packOpeningOverlay = document.getElementById('pack-opening-overlay');
+const packCardsGrid = document.getElementById('pack-cards-grid');
+const btnClosePack = document.getElementById('btn-close-pack');
+
+if (btnClosePack) {
+    btnClosePack.addEventListener('click', () => {
+        packOpeningOverlay.classList.add('hidden');
+        if (typeof playSE === 'function') playSE('click');
+    });
+}
+
+// 購入処理
+document.querySelectorAll('.btn-buy-pack').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        if (typeof playSE === 'function') playSE('click');
+        const packType = e.currentTarget.dataset.packType;
+        const cost = parseInt(e.currentTarget.dataset.cost, 10);
+
+        if (playerMoney < cost) {
+            alert('Gが足りません！');
+            if (typeof playSE === 'function') playSE('error');
+            return;
+        }
+
+        // お金消費
+        consumeMoney(cost);
+
+        // カード抽選
+        const newCards = drawPack(packType);
+
+        // インベントリ追加
+        if (typeof addCardToInventory === 'function') {
+            newCards.forEach(card => addCardToInventory(card.id));
+        }
+
+        // UI表示
+        showPackOpening(newCards);
+    });
+});
+
+function drawPack(packType) {
+    const cards = [];
+    let pool = [];
+
+    if (typeof CARD_DATA !== 'undefined') {
+        if (packType === 'normal') {
+            pool = CARD_DATA.filter(c => c.level >= 1 && c.level <= 5 && !c.isDebug);
+        } else if (packType === 'rare') {
+            pool = CARD_DATA.filter(c => c.level >= 3 && c.level <= 7 && !c.isDebug);
+        }
+    }
+
+    if (pool.length === 0) return cards;
+
+    for (let i = 0; i < 3; i++) {
+        const r = Math.floor(Math.random() * pool.length);
+        cards.push(pool[r]);
+    }
+    return cards;
+}
+
+function showPackOpening(cards) {
+    if (!packCardsGrid || !packOpeningOverlay) return;
+
+    packCardsGrid.innerHTML = '';
+    cards.forEach((card, index) => {
+        const cardWrapper = document.createElement('div');
+        cardWrapper.className = 'trade-card-item';
+        cardWrapper.style.opacity = '0';
+        cardWrapper.style.transform = 'translateY(20px)';
+        cardWrapper.style.transition = 'opacity 0.5s, transform 0.5s';
+
+        // レベル表示
+        const levelLabel = document.createElement('div');
+        levelLabel.className = 'trade-card-level';
+        levelLabel.textContent = `LV ${card.level}`;
+        cardWrapper.appendChild(levelLabel);
+
+        const cardEl = typeof createCardElement === 'function' ? createCardElement(card) : document.createElement('div');
+        cardWrapper.appendChild(cardEl);
+        packCardsGrid.appendChild(cardWrapper);
+
+        // 時間差で表示アニメーション
+        setTimeout(() => {
+            if (typeof playSE === 'function') playSE('place');
+            cardWrapper.style.opacity = '1';
+            cardWrapper.style.transform = 'translateY(0)';
+        }, 100 + (index * 300));
+    });
+
+    packOpeningOverlay.classList.remove('hidden');
+}
+
+// 売却システム
+const btnOpenSellModal = document.getElementById('btn-open-sell-modal');
+const sellModal = document.getElementById('sell-modal');
+const btnSellClose = document.getElementById('btn-sell-close');
+const btnExecuteSell = document.getElementById('btn-execute-sell');
+const sellTotalPriceDisplay = document.getElementById('sell-total-price');
+const sellCardsGrid = document.getElementById('sell-cards-grid');
+const btnSellSelectAllDuplicates = document.getElementById('btn-sell-select-all-duplicates');
+const btnSellClearSelection = document.getElementById('btn-sell-clear-selection');
+
+let sellSelectedCards = [];
+
+function calculateSellPrice(card) {
+    return card.level * card.level * 10;
+}
+
+function updateSellTotalPrice() {
+    let total = 0;
+    sellSelectedCards.forEach(c => {
+        total += calculateSellPrice(c);
+    });
+    if (sellTotalPriceDisplay) {
+        sellTotalPriceDisplay.textContent = total;
+    }
+    if (btnExecuteSell) {
+        btnExecuteSell.disabled = sellSelectedCards.length === 0;
+    }
+}
+
+function openSellModal() {
+    sellSelectedCards = [];
+    updateSellTotalPrice();
+    renderSellGrid();
+    if (sellModal) sellModal.classList.remove('hidden');
+}
+
+function renderSellGrid() {
+    if (!sellCardsGrid) return;
+    sellCardsGrid.innerHTML = '';
+
+    if (typeof playerInventory === 'undefined' || typeof CARD_DATA === 'undefined') return;
+
+    const allOwnedCards = [];
+    for (const [id, count] of Object.entries(playerInventory)) {
+        if (count > 0) {
+            const cardInfo = CARD_DATA.find(c => c.id === id);
+            if (cardInfo) {
+                for (let i = 0; i < count; i++) {
+                    allOwnedCards.push({ ...cardInfo, uniqueRef: id + '_' + i });
+                }
+            }
+        }
+    }
+
+    allOwnedCards.sort((a, b) => b.level - a.level || a.id.localeCompare(b.id));
+
+    allOwnedCards.forEach(card => {
+        const cardWrapper = document.createElement('div');
+        cardWrapper.className = 'collection-item';
+        cardWrapper.dataset.ref = card.uniqueRef;
+        cardWrapper.style.cursor = 'pointer';
+
+        const cardEl = createCardElement(card);
+        cardWrapper.appendChild(cardEl);
+
+        const priceLabel = document.createElement('div');
+        priceLabel.className = 'collection-count';
+        priceLabel.textContent = calculateSellPrice(card) + ' G';
+        cardWrapper.appendChild(priceLabel);
+
+        cardWrapper.addEventListener('click', () => {
+            if (typeof playSE === 'function') playSE('click');
+            const idx = sellSelectedCards.findIndex(c => c.uniqueRef === card.uniqueRef);
+            if (idx >= 0) {
+                sellSelectedCards.splice(idx, 1);
+                cardWrapper.classList.remove('sell-selected');
+            } else {
+                sellSelectedCards.push(card);
+                cardWrapper.classList.add('sell-selected');
+            }
+            updateSellTotalPrice();
+        });
+
+        sellCardsGrid.appendChild(cardWrapper);
+    });
+}
+
+if (btnOpenSellModal) {
+    btnOpenSellModal.addEventListener('click', () => {
+        if (typeof playSE === 'function') playSE('click');
+        openSellModal();
+    });
+}
+
+if (btnSellClose) {
+    btnSellClose.addEventListener('click', () => {
+        if (typeof playSE === 'function') playSE('click');
+        sellModal.classList.add('hidden');
+    });
+}
+
+if (btnSellClearSelection) {
+    btnSellClearSelection.addEventListener('click', () => {
+        if (typeof playSE === 'function') playSE('click');
+        sellSelectedCards = [];
+        document.querySelectorAll('#sell-cards-grid .collection-item.sell-selected').forEach(el => el.classList.remove('sell-selected'));
+        updateSellTotalPrice();
+    });
+}
+
+if (btnSellSelectAllDuplicates) {
+    btnSellSelectAllDuplicates.addEventListener('click', () => {
+        if (typeof playSE === 'function') playSE('click');
+        sellSelectedCards = [];
+        document.querySelectorAll('#sell-cards-grid .collection-item').forEach(el => el.classList.remove('sell-selected'));
+
+        const countMap = {};
+        for (const [id, count] of Object.entries(playerInventory)) {
+            if (count > 1) {
+                countMap[id] = count - 1; // 残す1枚を引いた数
+            }
+        }
+
+        const items = document.querySelectorAll('#sell-cards-grid .collection-item');
+        items.forEach(item => {
+            const cardId = item.dataset.ref.split('_')[0];
+            if (countMap[cardId] > 0) {
+                item.classList.add('sell-selected');
+                const cardInfo = CARD_DATA.find(c => c.id === cardId);
+                sellSelectedCards.push({ ...cardInfo, uniqueRef: item.dataset.ref });
+                countMap[cardId]--;
+            }
+        });
+        updateSellTotalPrice();
+    });
+}
+
+if (btnExecuteSell) {
+    btnExecuteSell.addEventListener('click', () => {
+        if (typeof playSE === 'function') playSE('place');
+
+        let totalGain = 0;
+        sellSelectedCards.forEach(card => {
+            totalGain += calculateSellPrice(card);
+            if (typeof removeCardFromInventory === 'function') {
+                removeCardFromInventory(card.id);
+            }
+        });
+
+        addMoney(totalGain);
+
+        sellModal.classList.add('hidden');
+
+        // エフェクトを表示（アラートの代わりにリザルト内で表示など）
+        const effectContainer = document.createElement('div');
+        effectContainer.className = 'special-rule-effect';
+        effectContainer.textContent = `${totalGain} G 獲得！`;
+        effectContainer.style.color = '#FFD700';
+        document.getElementById('screen-shop').appendChild(effectContainer);
+        setTimeout(() => effectContainer.remove(), 2000);
+
+        updateMoneyUI();
+    });
+}
